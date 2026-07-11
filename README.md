@@ -1,1 +1,1 @@
-Get news / informations from Lodestone on Discord
+Get news / informations from FFXIV Lodestone on Discord and events / polls
