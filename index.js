@@ -22,16 +22,14 @@ const LINKSHELL_ENABLED =
 const LINKSHELL_CHANNEL_ID = process.env.LINKSHELL_CHANNEL_ID;
 
 const GENERATE_DISCORD_DATAS_URL =
-  process.env.GENERATE_DISCORD_DATAS_URL ||
-  ".../crystal_planner/generate_discord_bot_datas.php";
+  process.env.GENERATE_DISCORD_DATAS_URL;
 
 const LINKSHELL_JSON_READ_DELAY_SECONDS = Number(
   process.env.LINKSHELL_JSON_READ_DELAY_SECONDS || 3
 );
 
 const DISCORD_DATAS_JSON_URL =
-  process.env.DISCORD_DATAS_JSON_URL ||
-  ".../crystal_planner/discord-bot-datas.json";
+  process.env.DISCORD_DATAS_JSON_URL;
 
 const LINKSHELL_ALWAYS_REPUBLISH =
   String(process.env.LINKSHELL_ALWAYS_REPUBLISH || "false").trim().toLowerCase() === "true";
