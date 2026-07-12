@@ -15,6 +15,10 @@ const CHECK_INTERVAL_MINUTES = Number(process.env.CHECK_INTERVAL_MINUTES || 10);
 const SEEN_FILE = path.join(__dirname, "seen-news.json");
 const LINKSHELL_CURRENT_FILE = path.join(__dirname, "discord-bot-datas-current.json");
 const LINKSHELL_PREVIOUS_FILE = path.join(__dirname, "discord-bot-datas-previous.json");
+const RULES_CURRENT_FILE = path.join(__dirname, "discord-rules-current.json");
+const RULES_PREVIOUS_FILE = path.join(__dirname, "discord-rules-previous.json");
+const GUIDES_CURRENT_FILE = path.join(__dirname, "discord-guides-current.json");
+const GUIDES_PREVIOUS_FILE = path.join(__dirname, "discord-guides-previous.json");
 
 const LINKSHELL_ENABLED =
   String(process.env.LINKSHELL_ENABLED || "false").trim().toLowerCase() === "true";
@@ -33,6 +37,18 @@ const DISCORD_DATAS_JSON_URL =
 
 const LINKSHELL_ALWAYS_REPUBLISH =
   String(process.env.LINKSHELL_ALWAYS_REPUBLISH || "false").trim().toLowerCase() === "true";
+
+const RULES_ENABLED =
+  String(process.env.RULES_ENABLED || "false").trim().toLowerCase() === "true";
+
+const RULES_CHANNEL_ID = process.env.RULES_CHANNEL_ID;
+const RULES_JSON_URL = process.env.RULES_JSON_URL;
+
+const GUIDES_ENABLED =
+  String(process.env.GUIDES_ENABLED || "false").trim().toLowerCase() === "true";
+
+const GUIDES_CHANNEL_ID = process.env.GUIDES_CHANNEL_ID;
+const GUIDES_JSON_URL = process.env.GUIDES_JSON_URL;
 
 const CATEGORIES = [
   {
@@ -87,6 +103,23 @@ function checkEnv() {
 
   if (LINKSHELL_ENABLED && !LINKSHELL_CHANNEL_ID) {
     console.warn("Warning: LINKSHELL_ENABLED=true but LINKSHELL_CHANNEL_ID is missing.");
+  }
+
+
+  if (RULES_ENABLED && !RULES_CHANNEL_ID) {
+    console.warn("Warning: RULES_ENABLED=true but RULES_CHANNEL_ID is missing.");
+  }
+
+  if (RULES_ENABLED && !RULES_JSON_URL) {
+    console.warn("Warning: RULES_ENABLED=true but RULES_JSON_URL is missing.");
+  }
+
+  if (GUIDES_ENABLED && !GUIDES_CHANNEL_ID) {
+    console.warn("Warning: GUIDES_ENABLED=true but GUIDES_CHANNEL_ID is missing.");
+  }
+
+  if (GUIDES_ENABLED && !GUIDES_JSON_URL) {
+    console.warn("Warning: GUIDES_ENABLED=true but GUIDES_JSON_URL is missing.");
   }
 }
 
@@ -820,6 +853,120 @@ async function syncLinkshellBoard() {
   console.log("Linkshell board: workflow complete. " + messages.length + " Discord message(s) handled.");
 }
 
+async function syncRulesBoard() {
+  if (!RULES_ENABLED) {
+    console.log("Rules board: disabled by RULES_ENABLED=false.");
+    return;
+  }
+
+  if (!RULES_CHANNEL_ID) {
+    console.warn("Rules board ignored: RULES_CHANNEL_ID is missing.");
+    return;
+  }
+
+  if (!RULES_JSON_URL) {
+    console.warn("Rules board ignored: RULES_JSON_URL is missing.");
+    return;
+  }
+
+  console.log("Rules board: downloading Discord rules JSON...");
+  const currentJsonText = await fetchJsonText(RULES_JSON_URL);
+  writeLocalFile(RULES_CURRENT_FILE, currentJsonText);
+
+  const previousJsonText = readLocalFile(RULES_PREVIOUS_FILE);
+  const previousMessages = normalizeMessagesForCompareFromText(previousJsonText);
+  const currentMessages = normalizeMessagesForCompareFromText(currentJsonText);
+
+  if (currentMessages === null) {
+    throw new Error("Invalid rules JSON: missing messages array.");
+  }
+
+  if (previousMessages !== null && currentMessages === previousMessages) {
+    console.log("Rules board: no rule change detected.");
+    return;
+  }
+
+  let currentData;
+  try {
+    currentData = JSON.parse(currentJsonText);
+  } catch (error) {
+    throw new Error("Invalid rules JSON: " + currentJsonText.slice(0, 300));
+  }
+
+  const messages = getDiscordMessages(currentData);
+  if (!Array.isArray(messages)) {
+    throw new Error("Invalid rules JSON: missing messages array.");
+  }
+
+  const channel = await getTextChannel(RULES_CHANNEL_ID);
+
+  console.log("Rules board: clearing Rules channel before publishing...");
+  await clearChannel(channel);
+
+  console.log("Rules board: publishing rule messages...");
+  await publishLinkshellMessages(channel, messages);
+
+  writeLocalFile(RULES_PREVIOUS_FILE, currentJsonText);
+  console.log("Rules board: workflow complete. " + messages.length + " Discord message(s) handled.");
+}
+
+async function syncGuidesBoard() {
+  if (!GUIDES_ENABLED) {
+    console.log("Guides board: disabled by GUIDES_ENABLED=false.");
+    return;
+  }
+
+  if (!GUIDES_CHANNEL_ID) {
+    console.warn("Guides board ignored: GUIDES_CHANNEL_ID is missing.");
+    return;
+  }
+
+  if (!GUIDES_JSON_URL) {
+    console.warn("Guides board ignored: GUIDES_JSON_URL is missing.");
+    return;
+  }
+
+  console.log("Guides board: downloading Discord guides JSON...");
+  const currentJsonText = await fetchJsonText(GUIDES_JSON_URL);
+  writeLocalFile(GUIDES_CURRENT_FILE, currentJsonText);
+
+  const previousJsonText = readLocalFile(GUIDES_PREVIOUS_FILE);
+  const previousMessages = normalizeMessagesForCompareFromText(previousJsonText);
+  const currentMessages = normalizeMessagesForCompareFromText(currentJsonText);
+
+  if (currentMessages === null) {
+    throw new Error("Invalid guides JSON: missing messages array.");
+  }
+
+  if (previousMessages !== null && currentMessages === previousMessages) {
+    console.log("Guides board: no guide change detected.");
+    return;
+  }
+
+  let currentData;
+  try {
+    currentData = JSON.parse(currentJsonText);
+  } catch (error) {
+    throw new Error("Invalid guides JSON: " + currentJsonText.slice(0, 300));
+  }
+
+  const messages = getDiscordMessages(currentData);
+  if (!Array.isArray(messages)) {
+    throw new Error("Invalid guides JSON: missing messages array.");
+  }
+
+  const channel = await getTextChannel(GUIDES_CHANNEL_ID);
+
+  console.log("Guides board: clearing Guides channel before publishing...");
+  await clearChannel(channel);
+
+  console.log("Guides board: publishing guide messages...");
+  await publishLinkshellMessages(channel, messages);
+
+  writeLocalFile(GUIDES_PREVIOUS_FILE, currentJsonText);
+  console.log("Guides board: workflow complete. " + messages.length + " Discord message(s) handled.");
+}
+
 async function runGlobalSync(firstRun = false) {
   console.log("Global sync: checking Lodestone news first...");
 
@@ -835,6 +982,22 @@ async function runGlobalSync(firstRun = false) {
     await syncLinkshellBoard(false);
   } catch (error) {
     console.error("Linkshell board sync error:", error.message);
+  }
+
+  console.log("Global sync: checking Discord rules JSON...");
+
+  try {
+    await syncRulesBoard();
+  } catch (error) {
+    console.error("Rules board sync error:", error.message);
+  }
+
+  console.log("Global sync: checking Discord guides JSON...");
+
+  try {
+    await syncGuidesBoard();
+  } catch (error) {
+    console.error("Guides board sync error:", error.message);
   }
 }
 
