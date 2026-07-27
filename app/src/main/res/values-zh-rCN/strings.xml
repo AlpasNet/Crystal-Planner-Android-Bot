@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">发送 Discord 消息</string>
     <string name="discord_op_read_messages">读取 Discord 频道消息</string>
     <string name="discord_op_bulk_delete">批量删除 Discord 消息</string>
+
+    <string name="section_settings_backup">设置备份</string>
+    <string name="settings_backup_info">备份包含频道 ID、URL、选项和同步间隔。Discord 令牌、日志和内部历史记录不会被导出。</string>
+    <string name="export_settings">导出设置</string>
+    <string name="import_settings">导入设置</string>
+    <string name="dialog_import_backup_title">导入此备份？</string>
+    <string name="dialog_import_backup_message">当前设置将被替换。已保存的 Discord 令牌会被保留。如果自动同步已启用，其计划也会更新。</string>
+    <string name="toast_backup_exported">设置备份已导出</string>
+    <string name="toast_backup_imported">设置导入成功</string>
+    <string name="error_backup_export_failed">无法导出备份：%1$s</string>
+    <string name="error_backup_import_failed">无法导入备份：%1$s</string>
 </resources>

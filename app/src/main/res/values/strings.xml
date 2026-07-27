@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Envoi du message Discord</string>
     <string name="discord_op_read_messages">Lecture des messages du salon Discord</string>
     <string name="discord_op_bulk_delete">Suppression groupée des messages Discord</string>
+
+    <string name="section_settings_backup">Sauvegarde des paramètres</string>
+    <string name="settings_backup_info">La sauvegarde contient les salons, les URL, les options et l’intervalle. Le jeton Discord, les journaux et l’historique ne sont jamais exportés.</string>
+    <string name="export_settings">Exporter les paramètres</string>
+    <string name="import_settings">Importer les paramètres</string>
+    <string name="dialog_import_backup_title">Importer cette sauvegarde ?</string>
+    <string name="dialog_import_backup_message">Les paramètres actuels seront remplacés. Le jeton Discord enregistré sera conservé. Si la synchronisation automatique est active, sa planification sera mise à jour.</string>
+    <string name="toast_backup_exported">Sauvegarde des paramètres exportée</string>
+    <string name="toast_backup_imported">Paramètres importés avec succès</string>
+    <string name="error_backup_export_failed">Impossible d’exporter la sauvegarde : %1$s</string>
+    <string name="error_backup_import_failed">Impossible d’importer la sauvegarde : %1$s</string>
 </resources>

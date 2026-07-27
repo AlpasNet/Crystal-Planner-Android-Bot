@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Discord メッセージの送信</string>
     <string name="discord_op_read_messages">Discord チャンネルメッセージの読み取り</string>
     <string name="discord_op_bulk_delete">Discord メッセージの一括削除</string>
+
+    <string name="section_settings_backup">設定のバックアップ</string>
+    <string name="settings_backup_info">バックアップにはチャンネルID、URL、オプション、間隔が含まれます。Discordトークン、ログ、内部履歴はエクスポートされません。</string>
+    <string name="export_settings">設定をエクスポート</string>
+    <string name="import_settings">設定をインポート</string>
+    <string name="dialog_import_backup_title">このバックアップをインポートしますか？</string>
+    <string name="dialog_import_backup_message">現在の設定は置き換えられます。保存済みのDiscordトークンは保持されます。自動同期が有効な場合、スケジュールも更新されます。</string>
+    <string name="toast_backup_exported">設定のバックアップをエクスポートしました</string>
+    <string name="toast_backup_imported">設定をインポートしました</string>
+    <string name="error_backup_export_failed">バックアップをエクスポートできませんでした：%1$s</string>
+    <string name="error_backup_import_failed">バックアップをインポートできませんでした：%1$s</string>
 </resources>

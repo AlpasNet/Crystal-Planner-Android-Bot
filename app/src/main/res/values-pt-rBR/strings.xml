@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Envio da mensagem do Discord</string>
     <string name="discord_op_read_messages">Leitura das mensagens do canal do Discord</string>
     <string name="discord_op_bulk_delete">Exclusão em massa das mensagens do Discord</string>
+
+    <string name="section_settings_backup">Backup das configurações</string>
+    <string name="settings_backup_info">O backup contém IDs dos canais, URLs, opções e o intervalo. O token do Discord, os registros e o histórico interno nunca são exportados.</string>
+    <string name="export_settings">Exportar configurações</string>
+    <string name="import_settings">Importar configurações</string>
+    <string name="dialog_import_backup_title">Importar este backup?</string>
+    <string name="dialog_import_backup_message">As configurações atuais serão substituídas. O token do Discord salvo será mantido. Se a sincronização automática estiver ativa, o agendamento será atualizado.</string>
+    <string name="toast_backup_exported">Backup das configurações exportado</string>
+    <string name="toast_backup_imported">Configurações importadas com sucesso</string>
+    <string name="error_backup_export_failed">Não foi possível exportar o backup: %1$s</string>
+    <string name="error_backup_import_failed">Não foi possível importar o backup: %1$s</string>
 </resources>

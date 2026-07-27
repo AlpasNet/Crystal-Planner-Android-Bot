@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Discord-Nachricht senden</string>
     <string name="discord_op_read_messages">Nachrichten des Discord-Kanals lesen</string>
     <string name="discord_op_bulk_delete">Discord-Nachrichten gesammelt löschen</string>
+
+    <string name="section_settings_backup">Einstellungssicherung</string>
+    <string name="settings_backup_info">Die Sicherung enthält Kanal-IDs, URLs, Optionen und das Intervall. Discord-Token, Protokolle und interner Verlauf werden niemals exportiert.</string>
+    <string name="export_settings">Einstellungen exportieren</string>
+    <string name="import_settings">Einstellungen importieren</string>
+    <string name="dialog_import_backup_title">Diese Sicherung importieren?</string>
+    <string name="dialog_import_backup_message">Die aktuellen Einstellungen werden ersetzt. Das gespeicherte Discord-Token bleibt erhalten. Wenn die automatische Synchronisierung aktiv ist, wird ihre Planung aktualisiert.</string>
+    <string name="toast_backup_exported">Einstellungssicherung exportiert</string>
+    <string name="toast_backup_imported">Einstellungen erfolgreich importiert</string>
+    <string name="error_backup_export_failed">Sicherung konnte nicht exportiert werden: %1$s</string>
+    <string name="error_backup_import_failed">Sicherung konnte nicht importiert werden: %1$s</string>
 </resources>

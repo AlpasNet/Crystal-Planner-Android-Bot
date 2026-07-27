@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Send Discord message</string>
     <string name="discord_op_read_messages">Read Discord channel messages</string>
     <string name="discord_op_bulk_delete">Bulk delete Discord messages</string>
+
+    <string name="section_settings_backup">Settings backup</string>
+    <string name="settings_backup_info">The backup contains channel IDs, URLs, options, and the interval. The Discord token, logs, and internal history are never exported.</string>
+    <string name="export_settings">Export settings</string>
+    <string name="import_settings">Import settings</string>
+    <string name="dialog_import_backup_title">Import this backup?</string>
+    <string name="dialog_import_backup_message">The current settings will be replaced. The stored Discord token will be preserved. If automatic sync is active, its schedule will be updated.</string>
+    <string name="toast_backup_exported">Settings backup exported</string>
+    <string name="toast_backup_imported">Settings imported successfully</string>
+    <string name="error_backup_export_failed">Unable to export the backup: %1$s</string>
+    <string name="error_backup_import_failed">Unable to import the backup: %1$s</string>
 </resources>

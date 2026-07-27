@@ -1,6 +1,7 @@
 package net.alpas.crystalplanner;
 
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -8,6 +9,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,15 +29,23 @@ import net.alpas.crystalplanner.discord.DiscordToken;
 import net.alpas.crystalplanner.storage.AppSettings;
 import net.alpas.crystalplanner.storage.SecureTokenStore;
 import net.alpas.crystalplanner.storage.StateStore;
+import net.alpas.crystalplanner.storage.SettingsBackup;
 import net.alpas.crystalplanner.sync.CrystalPlannerWorker;
 import net.alpas.crystalplanner.util.HttpClient;
 import net.alpas.crystalplanner.util.SyncLog;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +77,9 @@ public final class MainActivity extends AppCompatActivity {
     private TextView textLog;
     private Button buttonSchedule;
     private Button buttonDisable;
+    private ActivityResultLauncher<String> exportSettingsLauncher;
+    private ActivityResultLauncher<String[]> importSettingsLauncher;
+    private String pendingBackupContent;
 
     private WorkManager workManager;
     private StateStore stateStore;
@@ -82,6 +96,7 @@ public final class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        registerBackupLaunchers();
         bindViews();
 
         workManager = WorkManager.getInstance(this);
@@ -136,12 +151,18 @@ public final class MainActivity extends AppCompatActivity {
         Button clearToken = findViewById(R.id.buttonClearToken);
         Button clearLodestone = findViewById(R.id.buttonClearLodestoneChannels);
         Button save = findViewById(R.id.buttonSave);
+        Button exportSettings = findViewById(R.id.buttonExportSettings);
+        Button importSettings = findViewById(R.id.buttonImportSettings);
         Button runNow = findViewById(R.id.buttonRunNow);
 
         testToken.setOnClickListener(view -> testDiscordToken(testToken));
         clearToken.setOnClickListener(view -> clearDiscordToken());
         clearLodestone.setOnClickListener(view -> confirmClearLodestoneChannels());
         save.setOnClickListener(view -> saveSettings(true));
+        exportSettings.setOnClickListener(view -> beginSettingsExport());
+        importSettings.setOnClickListener(view -> importSettingsLauncher.launch(
+                new String[]{"application/json", "text/json", "text/plain"}
+        ));
         buttonSchedule.setOnClickListener(view -> {
             if (!saveSettings(false)) return;
             schedulePeriodicSync();
@@ -151,6 +172,108 @@ public final class MainActivity extends AppCompatActivity {
             if (!saveSettings(false)) return;
             enqueueManualSync();
         });
+    }
+
+    private void registerBackupLaunchers() {
+        exportSettingsLauncher = registerForActivityResult(
+                new ActivityResultContracts.CreateDocument("application/json"),
+                uri -> {
+                    if (uri != null) {
+                        writeSettingsBackup(uri);
+                    } else {
+                        pendingBackupContent = null;
+                    }
+                }
+        );
+        importSettingsLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri != null) readSettingsBackup(uri);
+                }
+        );
+    }
+
+    private void beginSettingsExport() {
+        try {
+            AppSettings settings = readSettingsFromForm();
+            pendingBackupContent = SettingsBackup.create(settings);
+            String timestamp = new SimpleDateFormat(
+                    "yyyyMMdd-HHmmss",
+                    Locale.ROOT
+            ).format(new Date());
+            exportSettingsLauncher.launch(
+                    "Crystal-Planner-settings-" + timestamp + ".json"
+            );
+        } catch (Exception error) {
+            toast(getString(R.string.error_backup_export_failed, errorMessage(error)));
+        }
+    }
+
+    private void writeSettingsBackup(Uri uri) {
+        final String content = pendingBackupContent;
+        pendingBackupContent = null;
+        if (content == null) return;
+
+        networkExecutor.execute(() -> {
+            try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
+                if (output == null) throw new IOException("Output stream unavailable");
+                output.write(content.getBytes(StandardCharsets.UTF_8));
+                output.flush();
+                runOnUiThread(() -> toast(R.string.toast_backup_exported));
+            } catch (Exception error) {
+                runOnUiThread(() -> toast(getString(
+                        R.string.error_backup_export_failed,
+                        errorMessage(error)
+                )));
+            }
+        });
+    }
+
+    private void readSettingsBackup(Uri uri) {
+        networkExecutor.execute(() -> {
+            try (InputStream input = getContentResolver().openInputStream(uri)) {
+                if (input == null) throw new IOException("Input stream unavailable");
+                AppSettings imported = SettingsBackup.parse(readUtf8(input));
+                runOnUiThread(() -> confirmSettingsImport(imported));
+            } catch (Exception error) {
+                runOnUiThread(() -> toast(getString(
+                        R.string.error_backup_import_failed,
+                        errorMessage(error)
+                )));
+            }
+        });
+    }
+
+    private void confirmSettingsImport(AppSettings imported) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.dialog_import_backup_title)
+                .setMessage(R.string.dialog_import_backup_message)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.import_settings, (dialog, which) -> {
+                    imported.save(this);
+                    editToken.setText("");
+                    loadSettings();
+                    if (periodicActive) {
+                        schedulePeriodicSync(false);
+                    }
+                    toast(R.string.toast_backup_imported);
+                })
+                .show();
+    }
+
+    private static String readUtf8(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int total = 0;
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            total += read;
+            if (total > 1024 * 1024) {
+                throw new IOException("Backup file is too large");
+            }
+            output.write(buffer, 0, read);
+        }
+        return new String(output.toByteArray(), StandardCharsets.UTF_8);
     }
 
     private void testDiscordToken(Button button) {
@@ -250,29 +373,33 @@ public final class MainActivity extends AppCompatActivity {
                 : getString(R.string.hint_discord_token));
     }
 
+    private AppSettings readSettingsFromForm() {
+        AppSettings s = new AppSettings();
+        s.intervalMinutes = Math.max(15, parseInt(editInterval, 15));
+        s.topicsChannel = value(editTopicsChannel);
+        s.noticesChannel = value(editNoticesChannel);
+        s.maintenanceChannel = value(editMaintenanceChannel);
+        s.updatesChannel = value(editUpdatesChannel);
+
+        s.linkshellEnabled = checkLinkshell.isChecked();
+        s.linkshellChannel = value(editLinkshellChannel);
+        s.generatorUrl = value(editGeneratorUrl);
+        s.dataJsonUrl = value(editDataJsonUrl);
+        s.jsonReadDelaySeconds = Math.max(0, parseInt(editDelay, 3));
+
+        s.rulesEnabled = checkRules.isChecked();
+        s.rulesChannel = value(editRulesChannel);
+        s.rulesJsonUrl = value(editRulesUrl);
+
+        s.guidesEnabled = checkGuides.isChecked();
+        s.guidesChannel = value(editGuidesChannel);
+        s.guidesJsonUrl = value(editGuidesUrl);
+        return s;
+    }
+
     private boolean saveSettings(boolean showConfirmation) {
         try {
-            AppSettings s = new AppSettings();
-            s.intervalMinutes = Math.max(15, parseInt(editInterval, 15));
-            s.topicsChannel = value(editTopicsChannel);
-            s.noticesChannel = value(editNoticesChannel);
-            s.maintenanceChannel = value(editMaintenanceChannel);
-            s.updatesChannel = value(editUpdatesChannel);
-
-            s.linkshellEnabled = checkLinkshell.isChecked();
-            s.linkshellChannel = value(editLinkshellChannel);
-            s.generatorUrl = value(editGeneratorUrl);
-            s.dataJsonUrl = value(editDataJsonUrl);
-            s.jsonReadDelaySeconds = Math.max(0, parseInt(editDelay, 3));
-
-            s.rulesEnabled = checkRules.isChecked();
-            s.rulesChannel = value(editRulesChannel);
-            s.rulesJsonUrl = value(editRulesUrl);
-
-            s.guidesEnabled = checkGuides.isChecked();
-            s.guidesChannel = value(editGuidesChannel);
-            s.guidesJsonUrl = value(editGuidesUrl);
-
+            AppSettings s = readSettingsFromForm();
             s.save(this);
             editInterval.setText(String.valueOf(s.intervalMinutes));
 
@@ -296,6 +423,10 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void schedulePeriodicSync() {
+        schedulePeriodicSync(true);
+    }
+
+    private void schedulePeriodicSync(boolean showToast) {
         AppSettings settings = AppSettings.load(this);
         Constraints constraints = networkConstraints();
         Data input = new Data.Builder()
@@ -319,7 +450,9 @@ public final class MainActivity extends AppCompatActivity {
         periodicActive = true;
         stateStore.setScheduled(true);
         renderStatus();
-        toast(getString(R.string.toast_sync_enabled, settings.intervalMinutes));
+        if (showToast) {
+            toast(getString(R.string.toast_sync_enabled, settings.intervalMinutes));
+        }
     }
 
     private void disablePeriodicSync() {
@@ -513,6 +646,13 @@ public final class MainActivity extends AppCompatActivity {
         String value = value(field);
         if (value.trim().isEmpty()) return fallback;
         return Integer.parseInt(value);
+    }
+
+    private static String errorMessage(Exception error) {
+        String message = error.getMessage();
+        return message == null || message.trim().isEmpty()
+                ? error.getClass().getSimpleName()
+                : message;
     }
 
     private void toast(int stringRes) {

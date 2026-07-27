@@ -3,6 +3,9 @@ package net.alpas.crystalplanner.storage;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public final class AppSettings {
     private static final String PREFS = "crystal_planner_settings";
 
@@ -71,6 +74,54 @@ public final class AppSettings {
                 .putString("guidesChannel", clean(guidesChannel))
                 .putString("guidesJsonUrl", clean(guidesJsonUrl))
                 .apply();
+    }
+
+    public JSONObject toJson() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("intervalMinutes", Math.max(15, intervalMinutes));
+        json.put("topicsChannel", clean(topicsChannel));
+        json.put("noticesChannel", clean(noticesChannel));
+        json.put("maintenanceChannel", clean(maintenanceChannel));
+        json.put("updatesChannel", clean(updatesChannel));
+
+        json.put("linkshellEnabled", linkshellEnabled);
+        json.put("linkshellChannel", clean(linkshellChannel));
+        json.put("generatorUrl", clean(generatorUrl));
+        json.put("dataJsonUrl", clean(dataJsonUrl));
+        json.put("jsonReadDelaySeconds", Math.max(0, jsonReadDelaySeconds));
+
+        json.put("rulesEnabled", rulesEnabled);
+        json.put("rulesChannel", clean(rulesChannel));
+        json.put("rulesJsonUrl", clean(rulesJsonUrl));
+
+        json.put("guidesEnabled", guidesEnabled);
+        json.put("guidesChannel", clean(guidesChannel));
+        json.put("guidesJsonUrl", clean(guidesJsonUrl));
+        return json;
+    }
+
+    public static AppSettings fromJson(JSONObject json) {
+        AppSettings s = new AppSettings();
+        s.intervalMinutes = Math.max(15, json.optInt("intervalMinutes", 15));
+        s.topicsChannel = clean(json.optString("topicsChannel", ""));
+        s.noticesChannel = clean(json.optString("noticesChannel", ""));
+        s.maintenanceChannel = clean(json.optString("maintenanceChannel", ""));
+        s.updatesChannel = clean(json.optString("updatesChannel", ""));
+
+        s.linkshellEnabled = json.optBoolean("linkshellEnabled", false);
+        s.linkshellChannel = clean(json.optString("linkshellChannel", ""));
+        s.generatorUrl = clean(json.optString("generatorUrl", ""));
+        s.dataJsonUrl = clean(json.optString("dataJsonUrl", ""));
+        s.jsonReadDelaySeconds = Math.max(0, json.optInt("jsonReadDelaySeconds", 3));
+
+        s.rulesEnabled = json.optBoolean("rulesEnabled", false);
+        s.rulesChannel = clean(json.optString("rulesChannel", ""));
+        s.rulesJsonUrl = clean(json.optString("rulesJsonUrl", ""));
+
+        s.guidesEnabled = json.optBoolean("guidesEnabled", false);
+        s.guidesChannel = clean(json.optString("guidesChannel", ""));
+        s.guidesJsonUrl = clean(json.optString("guidesJsonUrl", ""));
+        return s;
     }
 
     private static String clean(String value) {

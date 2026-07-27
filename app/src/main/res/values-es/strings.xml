@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Enviar mensaje de Discord</string>
     <string name="discord_op_read_messages">Leer mensajes del canal de Discord</string>
     <string name="discord_op_bulk_delete">Borrar mensajes de Discord en masa</string>
+
+    <string name="section_settings_backup">Copia de seguridad de ajustes</string>
+    <string name="settings_backup_info">La copia contiene los ID de los canales, las URL, las opciones y el intervalo. El token de Discord, los registros y el historial interno nunca se exportan.</string>
+    <string name="export_settings">Exportar ajustes</string>
+    <string name="import_settings">Importar ajustes</string>
+    <string name="dialog_import_backup_title">¿Importar esta copia de seguridad?</string>
+    <string name="dialog_import_backup_message">Se reemplazarán los ajustes actuales. Se conservará el token de Discord guardado. Si la sincronización automática está activa, se actualizará su programación.</string>
+    <string name="toast_backup_exported">Copia de ajustes exportada</string>
+    <string name="toast_backup_imported">Ajustes importados correctamente</string>
+    <string name="error_backup_export_failed">No se pudo exportar la copia: %1$s</string>
+    <string name="error_backup_import_failed">No se pudo importar la copia: %1$s</string>
 </resources>

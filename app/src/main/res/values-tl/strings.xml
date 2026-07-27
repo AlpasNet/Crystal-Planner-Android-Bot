@@ -113,4 +113,15 @@
     <string name="discord_op_send_message">Pagpadala ng Discord message</string>
     <string name="discord_op_read_messages">Pagbasa ng mga message sa Discord channel</string>
     <string name="discord_op_bulk_delete">Maramihang pagbura ng Discord messages</string>
+
+    <string name="section_settings_backup">Backup ng mga setting</string>
+    <string name="settings_backup_info">Kasama sa backup ang mga channel ID, URL, opsyon, at interval. Hindi kailanman ine-export ang Discord token, mga log, at internal history.</string>
+    <string name="export_settings">I-export ang mga setting</string>
+    <string name="import_settings">I-import ang mga setting</string>
+    <string name="dialog_import_backup_title">I-import ang backup na ito?</string>
+    <string name="dialog_import_backup_message">Papalitan ang kasalukuyang mga setting. Mananatili ang naka-save na Discord token. Kung aktibo ang awtomatikong pag-sync, ia-update ang iskedyul nito.</string>
+    <string name="toast_backup_exported">Na-export ang backup ng mga setting</string>
+    <string name="toast_backup_imported">Matagumpay na na-import ang mga setting</string>
+    <string name="error_backup_export_failed">Hindi ma-export ang backup: %1$s</string>
+    <string name="error_backup_import_failed">Hindi ma-import ang backup: %1$s</string>
 </resources>
