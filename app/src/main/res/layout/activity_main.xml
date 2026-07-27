@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/crystal_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <ImageView
+            android:layout_width="132dp"
+            android:layout_height="132dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/logo_content_description"
+            android:scaleType="fitCenter"
+            android:src="@drawable/crystal_planner_logo" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textColor="@color/crystal_text"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:text="@string/subtitle"
+            android:textColor="@color/crystal_text_muted"
+            android:textSize="14sp" />
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_general" />
+
+        <EditText
+            android:id="@+id/editToken"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_discord_token_saved"
+            android:inputType="textPassword"
+            android:importantForAutofill="noExcludeDescendants" />
+
+        <EditText
+            android:id="@+id/editInterval"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_interval"
+            android:inputType="number"
+            android:text="15" />
+
+        <TextView
+            style="@style/HelperText"
+            android:text="@string/token_security_info" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonTestToken"
+                style="@style/CrystalSecondaryButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/test_token" />
+
+            <Button
+                android:id="@+id/buttonClearToken"
+                style="@style/CrystalSecondaryButton"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/clear_token" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_lodestone" />
+
+        <EditText
+            android:id="@+id/editTopicsChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_topics_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editNoticesChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_notices_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editMaintenanceChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_maintenance_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editUpdatesChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_updates_channel"
+            android:inputType="number" />
+
+        <Button
+            android:id="@+id/buttonClearLodestoneChannels"
+            style="@style/CrystalDangerButton"
+            android:text="@string/clear_lodestone_messages" />
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_events_polls" />
+
+        <CheckBox
+            android:id="@+id/checkLinkshell"
+            style="@style/CrystalCheckBox"
+            android:text="@string/enable_events_sync" />
+
+        <EditText
+            android:id="@+id/editLinkshellChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_events_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editGeneratorUrl"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_generator_url"
+            android:inputType="textUri" />
+
+        <EditText
+            android:id="@+id/editDataJsonUrl"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_events_json_url"
+            android:inputType="textUri" />
+
+        <EditText
+            android:id="@+id/editDelay"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_generation_delay"
+            android:inputType="number"
+            android:text="3" />
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_rules" />
+
+        <CheckBox
+            android:id="@+id/checkRules"
+            style="@style/CrystalCheckBox"
+            android:text="@string/enable_rules_sync" />
+
+        <EditText
+            android:id="@+id/editRulesChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_rules_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editRulesUrl"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_rules_json_url"
+            android:inputType="textUri" />
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_guides" />
+
+        <CheckBox
+            android:id="@+id/checkGuides"
+            style="@style/CrystalCheckBox"
+            android:text="@string/enable_guides_sync" />
+
+        <EditText
+            android:id="@+id/editGuidesChannel"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_guides_channel"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/editGuidesUrl"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_guides_json_url"
+            android:inputType="textUri" />
+
+        <Button
+            android:id="@+id/buttonSave"
+            style="@style/CrystalPrimaryButton"
+            android:text="@string/save" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonSchedule"
+                style="@style/CrystalSecondaryButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/schedule" />
+
+            <Button
+                android:id="@+id/buttonDisable"
+                style="@style/CrystalSecondaryButton"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/stop_schedule" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonRunNow"
+            style="@style/CrystalPrimaryButton"
+            android:text="@string/run_now" />
+
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_status" />
+
+        <TextView
+            android:id="@+id/textStatus"
+            style="@style/StatusText"
+            android:text="@string/status_not_scheduled" />
+
+        <TextView
+            android:id="@+id/textLastRun"
+            style="@style/HelperText"
+            android:text="@string/last_run_none" />
+
+        <TextView
+            android:id="@+id/textLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/crystal_surface"
+            android:fontFamily="monospace"
+            android:minHeight="160dp"
+            android:padding="12dp"
+            android:text="@string/log_empty"
+            android:textColor="@color/crystal_text_muted"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="24dp" />
+
+    </LinearLayout>
+</ScrollView>

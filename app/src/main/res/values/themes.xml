@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CrystalPlanner" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/crystal_background</item>
+        <item name="android:navigationBarColor">@color/crystal_background</item>
+        <item name="android:windowBackground">@color/crystal_background</item>
+        <item name="colorAccent">@color/crystal_primary</item>
+    </style>
+
+    <style name="SectionTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">18dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:textColor">@color/crystal_primary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CrystalInput">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:backgroundTint">@color/crystal_primary</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:textColor">@color/crystal_text</item>
+        <item name="android:textColorHint">@color/crystal_text_muted</item>
+    </style>
+
+    <style name="CrystalCheckBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:buttonTint">@color/crystal_primary</item>
+        <item name="android:textColor">@color/crystal_text</item>
+    </style>
+
+    <style name="HelperText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/crystal_text_muted</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="StatusText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/crystal_surface_alt</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textColor">@color/crystal_text</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CrystalPrimaryButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:backgroundTint">@color/crystal_primary</item>
+        <item name="android:textColor">@color/crystal_background</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CrystalSecondaryButton" parent="Widget.AppCompat.Button">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:backgroundTint">@color/crystal_surface_alt</item>
+        <item name="android:textColor">@color/crystal_text</item>
+    </style>
+    <style name="CrystalDangerButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:backgroundTint">@color/crystal_error</item>
+        <item name="android:textColor">@color/crystal_background</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>
