@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public final class SettingsBackup {
     public static final String FORMAT = "crystal-planner-settings";
-    public static final int VERSION = 1;
+    public static final int VERSION = 3;
 
     private SettingsBackup() {
     }

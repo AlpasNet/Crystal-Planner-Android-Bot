@@ -31,6 +31,9 @@
     <string name="section_guides">Guide</string>
     <string name="enable_guides_sync">Attiva sincronizzazione Guides</string>
     <string name="hint_guides_channel">ID canale Guides</string>
+    <string name="section_macros">Macro</string>
+    <string name="enable_macros_sync">Attiva sincronizzazione delle macro</string>
+    <string name="hint_macros_channel">ID canale macro</string>
     <string name="hint_guides_json_url">URL JSON Guides</string>
     <string name="save">Salva</string>
     <string name="schedule">Attiva sincronizzazione</string>
@@ -94,6 +97,7 @@
     <string name="board_events">Eventi</string>
     <string name="board_rules">Regolamento</string>
     <string name="board_guides">Guide</string>
+    <string name="board_macros">Macro</string>
     <string name="log_board_disabled">Sezione %1$s ignorata: disattivata</string>
     <string name="error_board_channel_missing">ID del canale %1$s mancante</string>
     <string name="error_board_json_url_missing">URL JSON di %1$s mancante</string>
@@ -115,7 +119,7 @@
     <string name="discord_op_bulk_delete">Eliminazione multipla dei messaggi Discord</string>
 
     <string name="section_settings_backup">Backup delle impostazioni</string>
-    <string name="settings_backup_info">Il backup contiene ID dei canali, URL, opzioni e intervallo. Il token Discord, i registri e la cronologia interna non vengono mai esportati.</string>
+    <string name="settings_backup_info">Il backup contiene gli ID dei canali, il percorso della cartella Web, le opzioni e l’intervallo. Il token Discord, i log e la cronologia interna non vengono mai esportati.</string>
     <string name="export_settings">Esporta impostazioni</string>
     <string name="import_settings">Importa impostazioni</string>
     <string name="dialog_import_backup_title">Importare questo backup?</string>
@@ -124,4 +128,15 @@
     <string name="toast_backup_imported">Impostazioni importate correttamente</string>
     <string name="error_backup_export_failed">Impossibile esportare il backup: %1$s</string>
     <string name="error_backup_import_failed">Impossibile importare il backup: %1$s</string>
+
+    <string name="section_web_files">File Web</string>
+    <string name="hint_web_folder_url">Percorso Web della cartella</string>
+    <string name="web_files_info">Inserisci solo il percorso Web della cartella che contiene questi file fissi:\ngenerate_discord_bot_datas.php\ndiscord-bot-datas.json\ndiscord-rules.json\ndiscord-guides.json\ndiscord-macros.json</string>
+    <string name="log_web_folder_missing">Cartella Web: non configurata</string>
+    <string name="log_web_folder_path">Cartella Web: %1$s</string>
+    <string name="log_events_generator_path">Generatore eventi: %1$s</string>
+    <string name="log_events_json_path">JSON eventi e sondaggi: %1$s</string>
+    <string name="log_rules_json_path">JSON regolamento: %1$s</string>
+    <string name="log_guides_json_path">JSON guide: %1$s</string>
+    <string name="log_macros_json_path">JSON macro: %1$s</string>
 </resources>

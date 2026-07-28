@@ -62,16 +62,15 @@ public final class MainActivity extends AppCompatActivity {
     private EditText editMaintenanceChannel;
     private EditText editUpdatesChannel;
     private CheckBox checkLinkshell;
+    private EditText editWebFolderUrl;
     private EditText editLinkshellChannel;
-    private EditText editGeneratorUrl;
-    private EditText editDataJsonUrl;
     private EditText editDelay;
     private CheckBox checkRules;
     private EditText editRulesChannel;
-    private EditText editRulesUrl;
     private CheckBox checkGuides;
     private EditText editGuidesChannel;
-    private EditText editGuidesUrl;
+    private CheckBox checkMacros;
+    private EditText editMacrosChannel;
     private TextView textStatus;
     private TextView textLastRun;
     private TextView textLog;
@@ -128,17 +127,16 @@ public final class MainActivity extends AppCompatActivity {
         editNoticesChannel = findViewById(R.id.editNoticesChannel);
         editMaintenanceChannel = findViewById(R.id.editMaintenanceChannel);
         editUpdatesChannel = findViewById(R.id.editUpdatesChannel);
+        editWebFolderUrl = findViewById(R.id.editWebFolderUrl);
         checkLinkshell = findViewById(R.id.checkLinkshell);
         editLinkshellChannel = findViewById(R.id.editLinkshellChannel);
-        editGeneratorUrl = findViewById(R.id.editGeneratorUrl);
-        editDataJsonUrl = findViewById(R.id.editDataJsonUrl);
         editDelay = findViewById(R.id.editDelay);
         checkRules = findViewById(R.id.checkRules);
         editRulesChannel = findViewById(R.id.editRulesChannel);
-        editRulesUrl = findViewById(R.id.editRulesUrl);
         checkGuides = findViewById(R.id.checkGuides);
         editGuidesChannel = findViewById(R.id.editGuidesChannel);
-        editGuidesUrl = findViewById(R.id.editGuidesUrl);
+        checkMacros = findViewById(R.id.checkMacros);
+        editMacrosChannel = findViewById(R.id.editMacrosChannel);
         textStatus = findViewById(R.id.textStatus);
         textLastRun = findViewById(R.id.textLastRun);
         textLog = findViewById(R.id.textLog);
@@ -353,19 +351,20 @@ public final class MainActivity extends AppCompatActivity {
         editMaintenanceChannel.setText(s.maintenanceChannel);
         editUpdatesChannel.setText(s.updatesChannel);
 
+        editWebFolderUrl.setText(s.webFolderUrl);
+
         checkLinkshell.setChecked(s.linkshellEnabled);
         editLinkshellChannel.setText(s.linkshellChannel);
-        editGeneratorUrl.setText(s.generatorUrl);
-        editDataJsonUrl.setText(s.dataJsonUrl);
         editDelay.setText(String.valueOf(s.jsonReadDelaySeconds));
 
         checkRules.setChecked(s.rulesEnabled);
         editRulesChannel.setText(s.rulesChannel);
-        editRulesUrl.setText(s.rulesJsonUrl);
 
         checkGuides.setChecked(s.guidesEnabled);
         editGuidesChannel.setText(s.guidesChannel);
-        editGuidesUrl.setText(s.guidesJsonUrl);
+
+        checkMacros.setChecked(s.macrosEnabled);
+        editMacrosChannel.setText(s.macrosChannel);
 
         SecureTokenStore tokenStore = new SecureTokenStore(this);
         editToken.setHint(tokenStore.hasToken()
@@ -381,19 +380,20 @@ public final class MainActivity extends AppCompatActivity {
         s.maintenanceChannel = value(editMaintenanceChannel);
         s.updatesChannel = value(editUpdatesChannel);
 
+        s.webFolderUrl = value(editWebFolderUrl);
+
         s.linkshellEnabled = checkLinkshell.isChecked();
         s.linkshellChannel = value(editLinkshellChannel);
-        s.generatorUrl = value(editGeneratorUrl);
-        s.dataJsonUrl = value(editDataJsonUrl);
         s.jsonReadDelaySeconds = Math.max(0, parseInt(editDelay, 3));
 
         s.rulesEnabled = checkRules.isChecked();
         s.rulesChannel = value(editRulesChannel);
-        s.rulesJsonUrl = value(editRulesUrl);
 
         s.guidesEnabled = checkGuides.isChecked();
         s.guidesChannel = value(editGuidesChannel);
-        s.guidesJsonUrl = value(editGuidesUrl);
+
+        s.macrosEnabled = checkMacros.isChecked();
+        s.macrosChannel = value(editMacrosChannel);
         return s;
     }
 
@@ -402,6 +402,7 @@ public final class MainActivity extends AppCompatActivity {
             AppSettings s = readSettingsFromForm();
             s.save(this);
             editInterval.setText(String.valueOf(s.intervalMinutes));
+            editWebFolderUrl.setText(s.webFolderUrl);
 
             String token = value(editToken);
             if (!token.trim().isEmpty()) {

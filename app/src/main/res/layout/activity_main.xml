@@ -117,6 +117,20 @@
 
         <TextView
             style="@style/SectionTitle"
+            android:text="@string/section_web_files" />
+
+        <EditText
+            android:id="@+id/editWebFolderUrl"
+            style="@style/CrystalInput"
+            android:hint="@string/hint_web_folder_url"
+            android:inputType="textUri" />
+
+        <TextView
+            style="@style/HelperText"
+            android:text="@string/web_files_info" />
+
+        <TextView
+            style="@style/SectionTitle"
             android:text="@string/section_events_polls" />
 
         <CheckBox
@@ -130,17 +144,6 @@
             android:hint="@string/hint_events_channel"
             android:inputType="number" />
 
-        <EditText
-            android:id="@+id/editGeneratorUrl"
-            style="@style/CrystalInput"
-            android:hint="@string/hint_generator_url"
-            android:inputType="textUri" />
-
-        <EditText
-            android:id="@+id/editDataJsonUrl"
-            style="@style/CrystalInput"
-            android:hint="@string/hint_events_json_url"
-            android:inputType="textUri" />
 
         <EditText
             android:id="@+id/editDelay"
@@ -164,11 +167,6 @@
             android:hint="@string/hint_rules_channel"
             android:inputType="number" />
 
-        <EditText
-            android:id="@+id/editRulesUrl"
-            style="@style/CrystalInput"
-            android:hint="@string/hint_rules_json_url"
-            android:inputType="textUri" />
 
         <TextView
             style="@style/SectionTitle"
@@ -185,11 +183,20 @@
             android:hint="@string/hint_guides_channel"
             android:inputType="number" />
 
+        <TextView
+            style="@style/SectionTitle"
+            android:text="@string/section_macros" />
+
+        <CheckBox
+            android:id="@+id/checkMacros"
+            style="@style/CrystalCheckBox"
+            android:text="@string/enable_macros_sync" />
+
         <EditText
-            android:id="@+id/editGuidesUrl"
+            android:id="@+id/editMacrosChannel"
             style="@style/CrystalInput"
-            android:hint="@string/hint_guides_json_url"
-            android:inputType="textUri" />
+            android:hint="@string/hint_macros_channel"
+            android:inputType="number" />
 
         <Button
             android:id="@+id/buttonSave"
@@ -207,11 +214,13 @@
         <Button
             android:id="@+id/buttonExportSettings"
             style="@style/CrystalSecondaryButton"
+            android:layout_width="match_parent"
             android:text="@string/export_settings" />
 
         <Button
             android:id="@+id/buttonImportSettings"
             style="@style/CrystalSecondaryButton"
+            android:layout_width="match_parent"
             android:text="@string/import_settings" />
 
         <LinearLayout

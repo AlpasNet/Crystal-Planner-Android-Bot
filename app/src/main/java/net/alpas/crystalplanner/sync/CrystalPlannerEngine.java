@@ -52,6 +52,7 @@ public final class CrystalPlannerEngine {
     public Summary run() throws Exception {
         Summary summary = new Summary();
         log.info(context.getString(R.string.log_global_sync_started));
+        logConfiguredWebPaths();
         String botName = discord.verifyBot();
         log.info(context.getString(R.string.log_discord_auth_success, botName));
 
@@ -93,21 +94,28 @@ public final class CrystalPlannerEngine {
                 context.getString(R.string.board_events),
                 settings.linkshellEnabled,
                 settings.linkshellChannel,
-                settings.dataJsonUrl,
-                settings.generatorUrl,
+                settings.eventsJsonUrl(),
+                settings.generatorUrl(),
                 settings.jsonReadDelaySeconds);
         summary.boardMessages += runBoard(summary, boards, "rules",
                 context.getString(R.string.board_rules),
                 settings.rulesEnabled,
                 settings.rulesChannel,
-                settings.rulesJsonUrl,
+                settings.rulesJsonUrl(),
                 "",
                 0);
         summary.boardMessages += runBoard(summary, boards, "guides",
                 context.getString(R.string.board_guides),
                 settings.guidesEnabled,
                 settings.guidesChannel,
-                settings.guidesJsonUrl,
+                settings.guidesJsonUrl(),
+                "",
+                0);
+        summary.boardMessages += runBoard(summary, boards, "macros",
+                context.getString(R.string.board_macros),
+                settings.macrosEnabled,
+                settings.macrosChannel,
+                settings.macrosJsonUrl(),
                 "",
                 0);
 
@@ -116,6 +124,19 @@ public final class CrystalPlannerEngine {
                 summary.describe(context)
         ));
         return summary;
+    }
+
+    private void logConfiguredWebPaths() {
+        if (settings.webFolderUrl == null || settings.webFolderUrl.trim().isEmpty()) {
+            log.warn(context.getString(R.string.log_web_folder_missing));
+            return;
+        }
+        log.info(context.getString(R.string.log_web_folder_path, settings.webFolderUrl));
+        log.info(context.getString(R.string.log_events_generator_path, settings.generatorUrl()));
+        log.info(context.getString(R.string.log_events_json_path, settings.eventsJsonUrl()));
+        log.info(context.getString(R.string.log_rules_json_path, settings.rulesJsonUrl()));
+        log.info(context.getString(R.string.log_guides_json_path, settings.guidesJsonUrl()));
+        log.info(context.getString(R.string.log_macros_json_path, settings.macrosJsonUrl()));
     }
 
     public int clearLodestoneChannels() throws Exception {

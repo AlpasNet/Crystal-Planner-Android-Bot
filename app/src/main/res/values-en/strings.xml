@@ -31,6 +31,9 @@
     <string name="section_guides">Guides</string>
     <string name="enable_guides_sync">Enable Guides synchronization</string>
     <string name="hint_guides_channel">Guides channel ID</string>
+    <string name="section_macros">Macros</string>
+    <string name="enable_macros_sync">Enable Macros synchronization</string>
+    <string name="hint_macros_channel">Macros channel ID</string>
     <string name="hint_guides_json_url">Guides JSON URL</string>
     <string name="save">Save</string>
     <string name="schedule">Enable synchronization</string>
@@ -94,6 +97,7 @@
     <string name="board_events">Events</string>
     <string name="board_rules">Rules</string>
     <string name="board_guides">Guides</string>
+    <string name="board_macros">Macros</string>
     <string name="log_board_disabled">%1$s board skipped: disabled</string>
     <string name="error_board_channel_missing">%1$s channel ID is missing</string>
     <string name="error_board_json_url_missing">%1$s JSON URL is missing</string>
@@ -115,7 +119,7 @@
     <string name="discord_op_bulk_delete">Bulk delete Discord messages</string>
 
     <string name="section_settings_backup">Settings backup</string>
-    <string name="settings_backup_info">The backup contains channel IDs, URLs, options, and the interval. The Discord token, logs, and internal history are never exported.</string>
+    <string name="settings_backup_info">The backup contains channel IDs, the Web folder path, options, and the interval. The Discord token, logs, and internal history are never exported.</string>
     <string name="export_settings">Export settings</string>
     <string name="import_settings">Import settings</string>
     <string name="dialog_import_backup_title">Import this backup?</string>
@@ -124,4 +128,15 @@
     <string name="toast_backup_imported">Settings imported successfully</string>
     <string name="error_backup_export_failed">Unable to export the backup: %1$s</string>
     <string name="error_backup_import_failed">Unable to import the backup: %1$s</string>
+
+    <string name="section_web_files">Web files</string>
+    <string name="hint_web_folder_url">Web folder URL</string>
+    <string name="web_files_info">Only enter the Web folder containing these fixed files:\ngenerate_discord_bot_datas.php\ndiscord-bot-datas.json\ndiscord-rules.json\ndiscord-guides.json\ndiscord-macros.json</string>
+    <string name="log_web_folder_missing">Web folder: not configured</string>
+    <string name="log_web_folder_path">Web folder: %1$s</string>
+    <string name="log_events_generator_path">Events generator: %1$s</string>
+    <string name="log_events_json_path">Events and polls JSON: %1$s</string>
+    <string name="log_rules_json_path">Rules JSON: %1$s</string>
+    <string name="log_guides_json_path">Guides JSON: %1$s</string>
+    <string name="log_macros_json_path">Macros JSON: %1$s</string>
 </resources>
