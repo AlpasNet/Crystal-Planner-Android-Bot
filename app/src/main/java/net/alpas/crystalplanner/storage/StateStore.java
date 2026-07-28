@@ -17,7 +17,6 @@ import java.util.Set;
 public final class StateStore {
     private static final String PREFS = "crystal_planner_state";
     public static final String KEY_LAST_RUN = "last_run";
-    public static final String KEY_GATEWAY_STATE = "gateway_state";
     private final SharedPreferences prefs;
 
     public StateStore(Context context) {
@@ -75,25 +74,6 @@ public final class StateStore {
         }
     }
 
-
-    public void setGatewayState(String state, String detail) {
-        JSONObject object = new JSONObject();
-        try {
-            object.put("timestamp", System.currentTimeMillis());
-            object.put("state", state == null ? "stopped" : state);
-            object.put("detail", detail == null ? "" : detail);
-        } catch (JSONException ignored) {
-        }
-        prefs.edit().putString(KEY_GATEWAY_STATE, object.toString()).apply();
-    }
-
-    public JSONObject getGatewayState() {
-        try {
-            return new JSONObject(prefs.getString(KEY_GATEWAY_STATE, "{}"));
-        } catch (JSONException ignored) {
-            return new JSONObject();
-        }
-    }
 
     /**
      * Exports only duplicate-prevention history: Lodestone seen IDs and board hashes.

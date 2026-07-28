@@ -95,51 +95,6 @@
 
         <TextView
             style="@style/SectionTitle"
-            android:text="@string/section_bot_presence" />
-
-        <CheckBox
-            android:id="@+id/checkGatewayPresence"
-            style="@style/CrystalCheckBox"
-            android:text="@string/enable_bot_presence" />
-
-        <TextView
-            style="@style/HelperText"
-            android:text="@string/bot_presence_info" />
-
-        <TextView
-            style="@style/HelperText"
-            android:layout_marginTop="8dp"
-            android:text="@string/presence_status_label" />
-
-        <Spinner
-            android:id="@+id/spinnerPresenceStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:backgroundTint="@color/crystal_primary"
-            android:spinnerMode="dropdown" />
-
-        <TextView
-            style="@style/HelperText"
-            android:text="@string/presence_activity_label" />
-
-        <Spinner
-            android:id="@+id/spinnerActivityType"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:backgroundTint="@color/crystal_primary"
-            android:spinnerMode="dropdown" />
-
-        <EditText
-            android:id="@+id/editPresenceMessage"
-            style="@style/CrystalInput"
-            android:hint="@string/hint_presence_message"
-            android:inputType="textCapSentences"
-            android:maxLength="128" />
-
-        <TextView
-            style="@style/SectionTitle"
             android:text="@string/section_lodestone" />
 
         <EditText
