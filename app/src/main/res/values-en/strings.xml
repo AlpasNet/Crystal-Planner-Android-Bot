@@ -117,9 +117,8 @@
     <string name="discord_op_send_message">Send Discord message</string>
     <string name="discord_op_read_messages">Read Discord channel messages</string>
     <string name="discord_op_bulk_delete">Bulk delete Discord messages</string>
-
     <string name="section_settings_backup">Settings backup</string>
-    <string name="settings_backup_info">The backup contains channel IDs, the Web folder path, options, and the interval. The Discord token, logs, and internal history are never exported.</string>
+    <string name="settings_backup_info">The backup contains channel IDs, the Web folder path, options, and the interval. Enable the option below to also export duplicate-prevention history. The Discord token and logs are never exported.</string>
     <string name="export_settings">Export settings</string>
     <string name="import_settings">Import settings</string>
     <string name="dialog_import_backup_title">Import this backup?</string>
@@ -128,7 +127,6 @@
     <string name="toast_backup_imported">Settings imported successfully</string>
     <string name="error_backup_export_failed">Unable to export the backup: %1$s</string>
     <string name="error_backup_import_failed">Unable to import the backup: %1$s</string>
-
     <string name="section_web_files">Web files</string>
     <string name="hint_web_folder_url">Web folder URL</string>
     <string name="web_files_info">Only enter the Web folder containing these fixed files:\ngenerate_discord_bot_datas.php\ndiscord-bot-datas.json\ndiscord-rules.json\ndiscord-guides.json\ndiscord-macros.json</string>
@@ -139,4 +137,47 @@
     <string name="log_rules_json_path">Rules JSON: %1$s</string>
     <string name="log_guides_json_path">Guides JSON: %1$s</string>
     <string name="log_macros_json_path">Macros JSON: %1$s</string>
+    <string name="section_bot_presence">Discord bot presence</string>
+    <string name="enable_bot_presence">Keep the bot online with a status</string>
+    <string name="bot_presence_info">Uses a permanent Discord Gateway connection. Android displays an ongoing notification and battery usage will be higher.</string>
+    <string name="presence_status_label">Discord status</string>
+    <string name="presence_activity_label">Status message type</string>
+    <string name="hint_presence_message">Bot status message</string>
+    <string name="presence_status_online">Online</string>
+    <string name="presence_status_idle">Idle</string>
+    <string name="presence_status_dnd">Do Not Disturb</string>
+    <string name="presence_status_invisible">Invisible (shown offline)</string>
+    <string name="presence_activity_custom">Custom status</string>
+    <string name="presence_activity_playing">Playing</string>
+    <string name="presence_activity_watching">Watching</string>
+    <string name="presence_activity_listening">Listening</string>
+    <string name="presence_activity_competing">Competing</string>
+    <string name="gateway_state_disabled">DISABLED</string>
+    <string name="gateway_state_connected">CONNECTED</string>
+    <string name="gateway_state_connected_as">CONNECTED as %1$s</string>
+    <string name="gateway_state_connecting">CONNECTING</string>
+    <string name="gateway_state_reconnecting">RECONNECTING</string>
+    <string name="gateway_state_error">ERROR</string>
+    <string name="gateway_state_stopped">STOPPED</string>
+    <string name="status_bot_presence">Discord presence: %1$s</string>
+    <string name="gateway_notification_channel">Discord bot presence</string>
+    <string name="gateway_notification_channel_description">Keeps the Discord Gateway connection active</string>
+    <string name="gateway_notification_title">Crystal Planner — Discord presence</string>
+    <string name="gateway_notification_connecting">Connecting to Discord…</string>
+    <string name="gateway_notification_connected">Connected as %1$s</string>
+    <string name="gateway_notification_reconnecting">Reconnecting in %1$d seconds…</string>
+    <string name="gateway_notification_stop">Stop</string>
+    <string name="log_gateway_connected">Discord Gateway connected as %1$s</string>
+    <string name="log_gateway_resumed">Discord Gateway session resumed</string>
+    <string name="log_gateway_presence_updated">Discord presence updated: %1$s — %2$s</string>
+    <string name="log_gateway_presence_failed">Unable to update Discord presence: %1$s</string>
+    <string name="log_gateway_reconnecting">Discord Gateway reconnecting in %1$d seconds: %2$s</string>
+    <string name="toast_notification_permission_denied">Notification permission denied. Android may hide the foreground-service notification.</string>
+    <string name="error_gateway_start_failed">Unable to start Discord presence: %1$s</string>
+    <string name="include_internal_history">Include internal history to prevent duplicate publications</string>
+    <string name="dialog_import_backup_with_history_message">The current settings and duplicate-prevention history will be replaced. The stored Discord token will be preserved. Already published Lodestone items and board contents will remain marked as sent.</string>
+    <string name="toast_backup_with_history_imported">Settings and internal history imported successfully</string>
+    <string name="error_history_import_failed">Unable to import internal history: %1$s</string>
+    <string name="gateway_notification_error">Discord connection error</string>
+    <string name="log_gateway_permanent_error">Discord Gateway stopped: %1$s</string>
 </resources>

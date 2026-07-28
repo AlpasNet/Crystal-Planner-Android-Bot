@@ -117,9 +117,8 @@
     <string name="discord_op_send_message">Enviar mensaje de Discord</string>
     <string name="discord_op_read_messages">Leer mensajes del canal de Discord</string>
     <string name="discord_op_bulk_delete">Borrar mensajes de Discord en masa</string>
-
     <string name="section_settings_backup">Copia de seguridad de ajustes</string>
-    <string name="settings_backup_info">La copia contiene los ID de los canales, la ruta de la carpeta Web, las opciones y el intervalo. El token de Discord, los registros y el historial interno nunca se exportan.</string>
+    <string name="settings_backup_info">La copia contiene los ID de canales, la ruta Web, las opciones y el intervalo. Activa la opción siguiente para exportar también el historial antduplicados. El token de Discord y los registros nunca se exportan.</string>
     <string name="export_settings">Exportar ajustes</string>
     <string name="import_settings">Importar ajustes</string>
     <string name="dialog_import_backup_title">¿Importar esta copia de seguridad?</string>
@@ -128,7 +127,6 @@
     <string name="toast_backup_imported">Ajustes importados correctamente</string>
     <string name="error_backup_export_failed">No se pudo exportar la copia: %1$s</string>
     <string name="error_backup_import_failed">No se pudo importar la copia: %1$s</string>
-
     <string name="section_web_files">Archivos Web</string>
     <string name="hint_web_folder_url">Ruta Web de la carpeta</string>
     <string name="web_files_info">Introduce únicamente la ruta Web de la carpeta que contiene estos archivos fijos:\ngenerate_discord_bot_datas.php\ndiscord-bot-datas.json\ndiscord-rules.json\ndiscord-guides.json\ndiscord-macros.json</string>
@@ -139,4 +137,47 @@
     <string name="log_rules_json_path">JSON del reglamento: %1$s</string>
     <string name="log_guides_json_path">JSON de guías: %1$s</string>
     <string name="log_macros_json_path">JSON de macros: %1$s</string>
+    <string name="section_bot_presence">Presencia del bot de Discord</string>
+    <string name="enable_bot_presence">Mantener el bot en línea con un estado</string>
+    <string name="bot_presence_info">Usa una conexión permanente al Gateway de Discord. Android muestra una notificación continua y el consumo de batería será mayor.</string>
+    <string name="presence_status_label">Estado de Discord</string>
+    <string name="presence_activity_label">Tipo de mensaje de estado</string>
+    <string name="hint_presence_message">Mensaje de estado del bot</string>
+    <string name="presence_status_online">En línea</string>
+    <string name="presence_status_idle">Ausente</string>
+    <string name="presence_status_dnd">No molestar</string>
+    <string name="presence_status_invisible">Invisible (aparece desconectado)</string>
+    <string name="presence_activity_custom">Estado personalizado</string>
+    <string name="presence_activity_playing">Jugando</string>
+    <string name="presence_activity_watching">Viendo</string>
+    <string name="presence_activity_listening">Escuchando</string>
+    <string name="presence_activity_competing">Compitiendo</string>
+    <string name="gateway_state_disabled">DESACTIVADA</string>
+    <string name="gateway_state_connected">CONECTADO</string>
+    <string name="gateway_state_connected_as">CONECTADO como %1$s</string>
+    <string name="gateway_state_connecting">CONECTANDO</string>
+    <string name="gateway_state_reconnecting">RECONECTANDO</string>
+    <string name="gateway_state_error">ERROR</string>
+    <string name="gateway_state_stopped">DETENIDO</string>
+    <string name="status_bot_presence">Presencia de Discord: %1$s</string>
+    <string name="gateway_notification_channel">Presencia del bot de Discord</string>
+    <string name="gateway_notification_channel_description">Mantiene activa la conexión al Gateway de Discord</string>
+    <string name="gateway_notification_title">Crystal Planner — Presencia de Discord</string>
+    <string name="gateway_notification_connecting">Conectando con Discord…</string>
+    <string name="gateway_notification_connected">Conectado como %1$s</string>
+    <string name="gateway_notification_reconnecting">Reconectando en %1$d segundos…</string>
+    <string name="gateway_notification_stop">Detener</string>
+    <string name="log_gateway_connected">Gateway de Discord conectado como %1$s</string>
+    <string name="log_gateway_resumed">Sesión del Gateway de Discord reanudada</string>
+    <string name="log_gateway_presence_updated">Presencia de Discord actualizada: %1$s — %2$s</string>
+    <string name="log_gateway_presence_failed">No se pudo actualizar la presencia de Discord: %1$s</string>
+    <string name="log_gateway_reconnecting">El Gateway de Discord se reconectará en %1$d segundos: %2$s</string>
+    <string name="toast_notification_permission_denied">Permiso de notificaciones rechazado. Android puede ocultar la notificación del servicio en primer plano.</string>
+    <string name="error_gateway_start_failed">No se pudo iniciar la presencia de Discord: %1$s</string>
+    <string name="include_internal_history">Incluir el historial interno para evitar publicaciones duplicadas</string>
+    <string name="dialog_import_backup_with_history_message">Se reemplazarán los ajustes actuales y el historial antduplicados. El token de Discord guardado se conservará. El contenido ya publicado seguirá marcado como enviado.</string>
+    <string name="toast_backup_with_history_imported">Ajustes e historial interno importados correctamente</string>
+    <string name="error_history_import_failed">No se pudo importar el historial interno: %1$s</string>
+    <string name="gateway_notification_error">Error de conexión con Discord</string>
+    <string name="log_gateway_permanent_error">Gateway de Discord detenido: %1$s</string>
 </resources>

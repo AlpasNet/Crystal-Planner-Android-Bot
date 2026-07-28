@@ -16,6 +16,12 @@ public final class AppSettings {
     private static final String MACROS_FILE = "discord-macros.json";
 
     public int intervalMinutes = 15;
+    public boolean keepScreenOn = false;
+
+    public boolean gatewayPresenceEnabled = false;
+    public String presenceStatus = "online";
+    public int presenceActivityType = 4;
+    public String presenceMessage = "Crystal Planner";
     public String topicsChannel = "";
     public String noticesChannel = "";
     public String maintenanceChannel = "";
@@ -41,6 +47,11 @@ public final class AppSettings {
         SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         AppSettings s = new AppSettings();
         s.intervalMinutes = Math.max(15, p.getInt("intervalMinutes", 15));
+        s.keepScreenOn = p.getBoolean("keepScreenOn", false);
+        s.gatewayPresenceEnabled = p.getBoolean("gatewayPresenceEnabled", false);
+        s.presenceStatus = normalizePresenceStatus(p.getString("presenceStatus", "online"));
+        s.presenceActivityType = normalizeActivityType(p.getInt("presenceActivityType", 4));
+        s.presenceMessage = clean(p.getString("presenceMessage", "Crystal Planner"));
         s.topicsChannel = p.getString("topicsChannel", "");
         s.noticesChannel = p.getString("noticesChannel", "");
         s.maintenanceChannel = p.getString("maintenanceChannel", "");
@@ -82,6 +93,11 @@ public final class AppSettings {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit()
                 .putInt("intervalMinutes", Math.max(15, intervalMinutes))
+                .putBoolean("keepScreenOn", keepScreenOn)
+                .putBoolean("gatewayPresenceEnabled", gatewayPresenceEnabled)
+                .putString("presenceStatus", normalizePresenceStatus(presenceStatus))
+                .putInt("presenceActivityType", normalizeActivityType(presenceActivityType))
+                .putString("presenceMessage", clean(presenceMessage))
                 .putString("topicsChannel", clean(topicsChannel))
                 .putString("noticesChannel", clean(noticesChannel))
                 .putString("maintenanceChannel", clean(maintenanceChannel))
@@ -107,6 +123,11 @@ public final class AppSettings {
     public JSONObject toJson() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("intervalMinutes", Math.max(15, intervalMinutes));
+        json.put("keepScreenOn", keepScreenOn);
+        json.put("gatewayPresenceEnabled", gatewayPresenceEnabled);
+        json.put("presenceStatus", normalizePresenceStatus(presenceStatus));
+        json.put("presenceActivityType", normalizeActivityType(presenceActivityType));
+        json.put("presenceMessage", clean(presenceMessage));
         json.put("topicsChannel", clean(topicsChannel));
         json.put("noticesChannel", clean(noticesChannel));
         json.put("maintenanceChannel", clean(maintenanceChannel));
@@ -131,6 +152,11 @@ public final class AppSettings {
     public static AppSettings fromJson(JSONObject json) {
         AppSettings s = new AppSettings();
         s.intervalMinutes = Math.max(15, json.optInt("intervalMinutes", 15));
+        s.keepScreenOn = json.optBoolean("keepScreenOn", false);
+        s.gatewayPresenceEnabled = json.optBoolean("gatewayPresenceEnabled", false);
+        s.presenceStatus = normalizePresenceStatus(json.optString("presenceStatus", "online"));
+        s.presenceActivityType = normalizeActivityType(json.optInt("presenceActivityType", 4));
+        s.presenceMessage = clean(json.optString("presenceMessage", "Crystal Planner"));
         s.topicsChannel = clean(json.optString("topicsChannel", ""));
         s.noticesChannel = clean(json.optString("noticesChannel", ""));
         s.maintenanceChannel = clean(json.optString("maintenanceChannel", ""));
@@ -212,6 +238,20 @@ public final class AppSettings {
             normalized = normalized.substring(0, normalized.length() - 1);
         }
         return normalized;
+    }
+
+    public static String normalizePresenceStatus(String value) {
+        String status = clean(value).toLowerCase(java.util.Locale.ROOT);
+        if ("idle".equals(status) || "dnd".equals(status) || "invisible".equals(status)) {
+            return status;
+        }
+        return "online";
+    }
+
+    public static int normalizeActivityType(int value) {
+        return value == 0 || value == 2 || value == 3 || value == 4 || value == 5
+                ? value
+                : 4;
     }
 
     private static String clean(String value) {

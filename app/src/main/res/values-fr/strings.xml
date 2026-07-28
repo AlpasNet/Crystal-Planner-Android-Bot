@@ -8,6 +8,8 @@
     <string name="hint_discord_token">Jeton du bot Discord</string>
     <string name="hint_discord_token_verified">Jeton Discord vérifié — laisser vide pour le conserver</string>
     <string name="hint_discord_token_stored">Jeton Discord enregistré — laisser vide pour le conserver</string>
+    <string name="keep_screen_on">Maintenir l’écran allumé quand l’application est ouverte</string>
+    <string name="keep_screen_on_info">Quand cette option est activée, Android ne met pas l’écran en veille tant que Crystal Planner reste affichée au premier plan. Cela augmente la consommation de batterie.</string>
     <string name="hint_interval">Intervalle en minutes (minimum 15)</string>
     <string name="token_security_info">Le jeton est chiffré localement avec Android Keystore. Cette version est destinée à une installation personnelle, pas à une diffusion publique.</string>
     <string name="test_token">Tester le jeton</string>
@@ -117,9 +119,8 @@
     <string name="discord_op_send_message">Envoi du message Discord</string>
     <string name="discord_op_read_messages">Lecture des messages du salon Discord</string>
     <string name="discord_op_bulk_delete">Suppression groupée des messages Discord</string>
-
     <string name="section_settings_backup">Sauvegarde des paramètres</string>
-    <string name="settings_backup_info">La sauvegarde contient les identifiants des salons, le chemin du dossier Web, les options et l’intervalle. Le jeton Discord, les logs et l’historique interne ne sont jamais exportés.</string>
+    <string name="settings_backup_info">La sauvegarde contient les identifiants des salons, le chemin du dossier Web, les options et l’intervalle. Activez l’option ci-dessous pour exporter aussi l’historique anti-doublons. Le jeton Discord et les logs ne sont jamais exportés.</string>
     <string name="export_settings">Exporter les paramètres</string>
     <string name="import_settings">Importer les paramètres</string>
     <string name="dialog_import_backup_title">Importer cette sauvegarde ?</string>
@@ -128,7 +129,6 @@
     <string name="toast_backup_imported">Paramètres importés avec succès</string>
     <string name="error_backup_export_failed">Impossible d’exporter la sauvegarde : %1$s</string>
     <string name="error_backup_import_failed">Impossible d’importer la sauvegarde : %1$s</string>
-
     <string name="section_web_files">Fichiers Web</string>
     <string name="hint_web_folder_url">Chemin Web du dossier</string>
     <string name="web_files_info">Saisissez uniquement le chemin Web du dossier contenant ces fichiers fixes :\ngenerate_discord_bot_datas.php\ndiscord-bot-datas.json\ndiscord-rules.json\ndiscord-guides.json\ndiscord-macros.json</string>
@@ -139,4 +139,47 @@
     <string name="log_rules_json_path">JSON Règlement : %1$s</string>
     <string name="log_guides_json_path">JSON Guides : %1$s</string>
     <string name="log_macros_json_path">JSON Macros : %1$s</string>
+    <string name="section_bot_presence">Présence du bot Discord</string>
+    <string name="enable_bot_presence">Maintenir le bot en ligne avec un statut</string>
+    <string name="bot_presence_info">Utilise une connexion permanente au Gateway Discord. Android affiche une notification continue et la consommation de batterie sera plus élevée.</string>
+    <string name="presence_status_label">Statut Discord</string>
+    <string name="presence_activity_label">Type du message de statut</string>
+    <string name="hint_presence_message">Message de statut du bot</string>
+    <string name="presence_status_online">En ligne</string>
+    <string name="presence_status_idle">Absent</string>
+    <string name="presence_status_dnd">Ne pas déranger</string>
+    <string name="presence_status_invisible">Invisible (affiché hors ligne)</string>
+    <string name="presence_activity_custom">Statut personnalisé</string>
+    <string name="presence_activity_playing">Joue à</string>
+    <string name="presence_activity_watching">Regarde</string>
+    <string name="presence_activity_listening">Écoute</string>
+    <string name="presence_activity_competing">Participe à</string>
+    <string name="gateway_state_disabled">DÉSACTIVÉE</string>
+    <string name="gateway_state_connected">CONNECTÉ</string>
+    <string name="gateway_state_connected_as">CONNECTÉ en tant que %1$s</string>
+    <string name="gateway_state_connecting">CONNEXION</string>
+    <string name="gateway_state_reconnecting">RECONNEXION</string>
+    <string name="gateway_state_error">ERREUR</string>
+    <string name="gateway_state_stopped">ARRÊTÉ</string>
+    <string name="status_bot_presence">Présence Discord : %1$s</string>
+    <string name="gateway_notification_channel">Présence du bot Discord</string>
+    <string name="gateway_notification_channel_description">Maintient la connexion au Gateway Discord</string>
+    <string name="gateway_notification_title">Crystal Planner — Présence Discord</string>
+    <string name="gateway_notification_connecting">Connexion à Discord…</string>
+    <string name="gateway_notification_connected">Connecté en tant que %1$s</string>
+    <string name="gateway_notification_reconnecting">Reconnexion dans %1$d secondes…</string>
+    <string name="gateway_notification_stop">Arrêter</string>
+    <string name="log_gateway_connected">Gateway Discord connecté en tant que %1$s</string>
+    <string name="log_gateway_resumed">Session Gateway Discord reprise</string>
+    <string name="log_gateway_presence_updated">Présence Discord mise à jour : %1$s — %2$s</string>
+    <string name="log_gateway_presence_failed">Impossible de mettre à jour la présence Discord : %1$s</string>
+    <string name="log_gateway_reconnecting">Reconnexion au Gateway Discord dans %1$d secondes : %2$s</string>
+    <string name="toast_notification_permission_denied">Permission de notification refusée. Android peut masquer la notification du service au premier plan.</string>
+    <string name="error_gateway_start_failed">Impossible de démarrer la présence Discord : %1$s</string>
+    <string name="include_internal_history">Inclure l’historique interne pour éviter les republications</string>
+    <string name="dialog_import_backup_with_history_message">Les paramètres actuels et l’historique anti-doublons seront remplacés. Le jeton Discord enregistré sera conservé. Les actualités Lodestone et contenus déjà publiés resteront marqués comme envoyés.</string>
+    <string name="toast_backup_with_history_imported">Paramètres et historique interne importés avec succès</string>
+    <string name="error_history_import_failed">Impossible d’importer l’historique interne : %1$s</string>
+    <string name="gateway_notification_error">Erreur de connexion Discord</string>
+    <string name="log_gateway_permanent_error">Gateway Discord arrêté : %1$s</string>
 </resources>

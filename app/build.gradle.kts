@@ -10,8 +10,8 @@ android {
         applicationId = "net.alpas.crystalplanner"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 12
+        versionName = "1.0.11"
     }
 
     buildTypes {
@@ -36,4 +36,5 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.work:work-runtime:2.11.2")
     implementation("org.jsoup:jsoup:1.22.2")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

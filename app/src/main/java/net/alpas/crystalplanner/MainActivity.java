@@ -1,11 +1,17 @@
 package net.alpas.crystalplanner;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -25,6 +32,7 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import net.alpas.crystalplanner.discord.DiscordApi;
+import net.alpas.crystalplanner.gateway.GatewayPresenceService;
 import net.alpas.crystalplanner.discord.DiscordToken;
 import net.alpas.crystalplanner.storage.AppSettings;
 import net.alpas.crystalplanner.storage.SecureTokenStore;
@@ -54,9 +62,16 @@ public final class MainActivity extends AppCompatActivity {
     private static final String PERIODIC_WORK = "crystal_planner_periodic_sync";
     private static final String MANUAL_WORK = "crystal_planner_manual_sync";
     private static final String CLEAR_LODESTONE_WORK = "crystal_planner_clear_lodestone";
+    private static final String[] PRESENCE_STATUS_VALUES = {"online", "idle", "dnd", "invisible"};
+    private static final int[] PRESENCE_ACTIVITY_TYPES = {4, 0, 3, 2, 5};
 
     private EditText editToken;
     private EditText editInterval;
+    private CheckBox checkKeepScreenOn;
+    private CheckBox checkGatewayPresence;
+    private Spinner spinnerPresenceStatus;
+    private Spinner spinnerActivityType;
+    private EditText editPresenceMessage;
     private EditText editTopicsChannel;
     private EditText editNoticesChannel;
     private EditText editMaintenanceChannel;
@@ -78,6 +93,8 @@ public final class MainActivity extends AppCompatActivity {
     private Button buttonDisable;
     private ActivityResultLauncher<String> exportSettingsLauncher;
     private ActivityResultLauncher<String[]> importSettingsLauncher;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
+    private CheckBox checkIncludeHistory;
     private String pendingBackupContent;
 
     private WorkManager workManager;
@@ -97,21 +114,25 @@ public final class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         registerBackupLaunchers();
         bindViews();
+        configurePresenceSpinners();
 
         workManager = WorkManager.getInstance(this);
         stateStore = new StateStore(this);
         syncLog = new SyncLog(this);
         stateListener = (preferences, key) -> {
-            if (StateStore.KEY_LAST_RUN.equals(key)) {
+            if (StateStore.KEY_LAST_RUN.equals(key)
+                    || StateStore.KEY_GATEWAY_STATE.equals(key)) {
                 runOnUiThread(this::refreshStatus);
             }
         };
         stateStore.registerListener(stateListener);
 
         loadSettings();
+        applyKeepScreenOnSetting();
         configureActions();
         observeWork();
         refreshStatus();
+        if (AppSettings.load(this).gatewayPresenceEnabled) applyGatewaySetting();
     }
 
     @Override
@@ -123,6 +144,11 @@ public final class MainActivity extends AppCompatActivity {
     private void bindViews() {
         editToken = findViewById(R.id.editToken);
         editInterval = findViewById(R.id.editInterval);
+        checkKeepScreenOn = findViewById(R.id.checkKeepScreenOn);
+        checkGatewayPresence = findViewById(R.id.checkGatewayPresence);
+        spinnerPresenceStatus = findViewById(R.id.spinnerPresenceStatus);
+        spinnerActivityType = findViewById(R.id.spinnerActivityType);
+        editPresenceMessage = findViewById(R.id.editPresenceMessage);
         editTopicsChannel = findViewById(R.id.editTopicsChannel);
         editNoticesChannel = findViewById(R.id.editNoticesChannel);
         editMaintenanceChannel = findViewById(R.id.editMaintenanceChannel);
@@ -142,6 +168,7 @@ public final class MainActivity extends AppCompatActivity {
         textLog = findViewById(R.id.textLog);
         buttonSchedule = findViewById(R.id.buttonSchedule);
         buttonDisable = findViewById(R.id.buttonDisable);
+        checkIncludeHistory = findViewById(R.id.checkIncludeHistory);
     }
 
     private void configureActions() {
@@ -156,18 +183,22 @@ public final class MainActivity extends AppCompatActivity {
         testToken.setOnClickListener(view -> testDiscordToken(testToken));
         clearToken.setOnClickListener(view -> clearDiscordToken());
         clearLodestone.setOnClickListener(view -> confirmClearLodestoneChannels());
-        save.setOnClickListener(view -> saveSettings(true));
+        save.setOnClickListener(view -> {
+            if (saveSettings(true)) applyGatewaySetting();
+        });
         exportSettings.setOnClickListener(view -> beginSettingsExport());
         importSettings.setOnClickListener(view -> importSettingsLauncher.launch(
                 new String[]{"application/json", "text/json", "text/plain"}
         ));
         buttonSchedule.setOnClickListener(view -> {
             if (!saveSettings(false)) return;
+            applyGatewaySetting();
             schedulePeriodicSync();
         });
         buttonDisable.setOnClickListener(view -> disablePeriodicSync());
         runNow.setOnClickListener(view -> {
             if (!saveSettings(false)) return;
+            applyGatewaySetting();
             enqueueManualSync();
         });
     }
@@ -189,12 +220,22 @@ public final class MainActivity extends AppCompatActivity {
                     if (uri != null) readSettingsBackup(uri);
                 }
         );
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (!granted) toast(R.string.toast_notification_permission_denied);
+                    startGatewayServiceIfEnabled();
+                }
+        );
     }
 
     private void beginSettingsExport() {
         try {
             AppSettings settings = readSettingsFromForm();
-            pendingBackupContent = SettingsBackup.create(settings);
+            JSONObject history = checkIncludeHistory != null && checkIncludeHistory.isChecked()
+                    ? stateStore.exportHistory()
+                    : null;
+            pendingBackupContent = SettingsBackup.create(settings, history);
             String timestamp = new SimpleDateFormat(
                     "yyyyMMdd-HHmmss",
                     Locale.ROOT
@@ -231,7 +272,7 @@ public final class MainActivity extends AppCompatActivity {
         networkExecutor.execute(() -> {
             try (InputStream input = getContentResolver().openInputStream(uri)) {
                 if (input == null) throw new IOException("Input stream unavailable");
-                AppSettings imported = SettingsBackup.parse(readUtf8(input));
+                SettingsBackup.RestoreData imported = SettingsBackup.parse(readUtf8(input));
                 runOnUiThread(() -> confirmSettingsImport(imported));
             } catch (Exception error) {
                 runOnUiThread(() -> toast(getString(
@@ -242,19 +283,33 @@ public final class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void confirmSettingsImport(AppSettings imported) {
+    private void confirmSettingsImport(SettingsBackup.RestoreData imported) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.dialog_import_backup_title)
-                .setMessage(R.string.dialog_import_backup_message)
+                .setMessage(imported.hasHistory()
+                        ? R.string.dialog_import_backup_with_history_message
+                        : R.string.dialog_import_backup_message)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.import_settings, (dialog, which) -> {
-                    imported.save(this);
+                    imported.settings.save(this);
+                    if (imported.hasHistory()) {
+                        try {
+                            stateStore.importHistory(imported.history);
+                        } catch (Exception error) {
+                            toast(getString(R.string.error_history_import_failed, errorMessage(error)));
+                            return;
+                        }
+                    }
                     editToken.setText("");
                     loadSettings();
+                    applyKeepScreenOnSetting();
                     if (periodicActive) {
                         schedulePeriodicSync(false);
                     }
-                    toast(R.string.toast_backup_imported);
+                    applyGatewaySetting();
+                    toast(imported.hasHistory()
+                            ? R.string.toast_backup_with_history_imported
+                            : R.string.toast_backup_imported);
                 })
                 .show();
     }
@@ -327,6 +382,11 @@ public final class MainActivity extends AppCompatActivity {
 
     private void clearDiscordToken() {
         new SecureTokenStore(this).clear();
+        AppSettings settings = AppSettings.load(this);
+        settings.gatewayPresenceEnabled = false;
+        settings.save(this);
+        if (checkGatewayPresence != null) checkGatewayPresence.setChecked(false);
+        GatewayPresenceService.stop(this);
         editToken.setText("");
         editToken.setHint(R.string.hint_discord_token);
         toast(R.string.toast_token_cleared);
@@ -346,6 +406,11 @@ public final class MainActivity extends AppCompatActivity {
     private void loadSettings() {
         AppSettings s = AppSettings.load(this);
         editInterval.setText(String.valueOf(s.intervalMinutes));
+        checkKeepScreenOn.setChecked(s.keepScreenOn);
+        checkGatewayPresence.setChecked(s.gatewayPresenceEnabled);
+        setSpinnerSelection(spinnerPresenceStatus, PRESENCE_STATUS_VALUES, s.presenceStatus);
+        setSpinnerActivitySelection(s.presenceActivityType);
+        editPresenceMessage.setText(s.presenceMessage);
         editTopicsChannel.setText(s.topicsChannel);
         editNoticesChannel.setText(s.noticesChannel);
         editMaintenanceChannel.setText(s.maintenanceChannel);
@@ -375,6 +440,12 @@ public final class MainActivity extends AppCompatActivity {
     private AppSettings readSettingsFromForm() {
         AppSettings s = new AppSettings();
         s.intervalMinutes = Math.max(15, parseInt(editInterval, 15));
+        s.keepScreenOn = checkKeepScreenOn.isChecked();
+        s.gatewayPresenceEnabled = checkGatewayPresence.isChecked();
+        s.presenceStatus = PRESENCE_STATUS_VALUES[Math.max(0, spinnerPresenceStatus.getSelectedItemPosition())];
+        int activityPosition = Math.max(0, spinnerActivityType.getSelectedItemPosition());
+        s.presenceActivityType = PRESENCE_ACTIVITY_TYPES[Math.min(activityPosition, PRESENCE_ACTIVITY_TYPES.length - 1)];
+        s.presenceMessage = value(editPresenceMessage);
         s.topicsChannel = value(editTopicsChannel);
         s.noticesChannel = value(editNoticesChannel);
         s.maintenanceChannel = value(editMaintenanceChannel);
@@ -402,6 +473,11 @@ public final class MainActivity extends AppCompatActivity {
             AppSettings s = readSettingsFromForm();
             s.save(this);
             editInterval.setText(String.valueOf(s.intervalMinutes));
+            checkKeepScreenOn.setChecked(s.keepScreenOn);
+            checkGatewayPresence.setChecked(s.gatewayPresenceEnabled);
+            setSpinnerSelection(spinnerPresenceStatus, PRESENCE_STATUS_VALUES, s.presenceStatus);
+            setSpinnerActivitySelection(s.presenceActivityType);
+            editPresenceMessage.setText(s.presenceMessage);
             editWebFolderUrl.setText(s.webFolderUrl);
 
             String token = value(editToken);
@@ -415,12 +491,98 @@ public final class MainActivity extends AppCompatActivity {
                 throw new IllegalStateException(getString(R.string.error_token_required));
             }
 
+            applyKeepScreenOnSetting();
             if (showConfirmation) toast(R.string.toast_settings_saved);
             return true;
         } catch (Exception error) {
             toast(getString(R.string.error_with_message, error.getMessage()));
             return false;
         }
+    }
+
+    private void configurePresenceSpinners() {
+        ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
+                this,
+                R.layout.spinner_item,
+                new String[]{
+                        getString(R.string.presence_status_online),
+                        getString(R.string.presence_status_idle),
+                        getString(R.string.presence_status_dnd),
+                        getString(R.string.presence_status_invisible)
+                }
+        );
+        statusAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        spinnerPresenceStatus.setAdapter(statusAdapter);
+
+        ArrayAdapter<String> activityAdapter = new ArrayAdapter<>(
+                this,
+                R.layout.spinner_item,
+                new String[]{
+                        getString(R.string.presence_activity_custom),
+                        getString(R.string.presence_activity_playing),
+                        getString(R.string.presence_activity_watching),
+                        getString(R.string.presence_activity_listening),
+                        getString(R.string.presence_activity_competing)
+                }
+        );
+        activityAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        spinnerActivityType.setAdapter(activityAdapter);
+    }
+
+    private void applyKeepScreenOnSetting() {
+        AppSettings settings = AppSettings.load(this);
+        if (settings.keepScreenOn) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    }
+
+    private void applyGatewaySetting() {
+        AppSettings settings = AppSettings.load(this);
+        if (!settings.gatewayPresenceEnabled) {
+            GatewayPresenceService.stop(this);
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            return;
+        }
+        startGatewayServiceIfEnabled();
+    }
+
+    private void startGatewayServiceIfEnabled() {
+        AppSettings settings = AppSettings.load(this);
+        if (settings.gatewayPresenceEnabled) {
+            try {
+                GatewayPresenceService.startOrUpdate(this);
+            } catch (Exception error) {
+                toast(getString(R.string.error_gateway_start_failed, errorMessage(error)));
+            }
+        }
+    }
+
+    private static void setSpinnerSelection(Spinner spinner, String[] values, String selected) {
+        String expected = selected == null ? "" : selected;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i].equals(expected)) {
+                spinner.setSelection(i);
+                return;
+            }
+        }
+        spinner.setSelection(0);
+    }
+
+    private void setSpinnerActivitySelection(int selectedType) {
+        for (int i = 0; i < PRESENCE_ACTIVITY_TYPES.length; i++) {
+            if (PRESENCE_ACTIVITY_TYPES[i] == selectedType) {
+                spinnerActivityType.setSelection(i);
+                return;
+            }
+        }
+        spinnerActivityType.setSelection(0);
     }
 
     private void schedulePeriodicSync() {
@@ -618,6 +780,28 @@ public final class MainActivity extends AppCompatActivity {
         } else if (manualRunning || periodicRunning) {
             status.append("\n").append(getString(R.string.status_sync_running));
         }
+
+        AppSettings currentSettings = AppSettings.load(this);
+        JSONObject gateway = stateStore == null ? new JSONObject() : stateStore.getGatewayState();
+        String gatewayCode = gateway.optString("state", "stopped");
+        String gatewayText;
+        if (!currentSettings.gatewayPresenceEnabled) {
+            gatewayText = getString(R.string.gateway_state_disabled);
+        } else if ("connected".equals(gatewayCode)) {
+            String detail = gateway.optString("detail", "");
+            gatewayText = detail.trim().isEmpty()
+                    ? getString(R.string.gateway_state_connected)
+                    : getString(R.string.gateway_state_connected_as, detail);
+        } else if ("connecting".equals(gatewayCode)) {
+            gatewayText = getString(R.string.gateway_state_connecting);
+        } else if ("reconnecting".equals(gatewayCode)) {
+            gatewayText = getString(R.string.gateway_state_reconnecting);
+        } else if ("error".equals(gatewayCode)) {
+            gatewayText = getString(R.string.gateway_state_error);
+        } else {
+            gatewayText = getString(R.string.gateway_state_stopped);
+        }
+        status.append("\n").append(getString(R.string.status_bot_presence, gatewayText));
 
         textStatus.setText(status.toString());
         if (buttonSchedule != null) {
