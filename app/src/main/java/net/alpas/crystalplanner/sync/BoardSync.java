@@ -103,11 +103,47 @@ public final class BoardSync {
             discord.sendMessage(channelId, payload);
             published++;
             Thread.sleep(800L);
+
+            // Guides use the embed URL as their public guide link. Discord makes
+            // that URL clickable on the title, but does not display it below
+            // the embed image. Publish the same URL as a second message so the
+            // guide link is visibly placed immediately below its image, as in
+            // the Crystal Planner Web preview.
+            if ("guides".equals(boardKey)) {
+                String guideLink = extractGuideLink(raw);
+                if (!guideLink.isEmpty()) {
+                    JSONObject linkPayload = new JSONObject();
+                    linkPayload.put("content", guideLink);
+                    JSONObject allowedMentions = new JSONObject();
+                    allowedMentions.put("parse", new JSONArray());
+                    linkPayload.put("allowed_mentions", allowedMentions);
+                    discord.sendMessage(channelId, linkPayload);
+                    published++;
+                    Thread.sleep(800L);
+                }
+            }
         }
 
         state.setBoardHash(boardKey, hash);
         log.info(context.getString(R.string.log_board_published, boardLabel, published));
         return published;
+    }
+
+    private static String extractGuideLink(JSONObject raw) {
+        if (raw == null) return "";
+
+        JSONArray embeds = raw.optJSONArray("embeds");
+        if (embeds == null) return "";
+
+        for (int i = 0; i < embeds.length(); i++) {
+            JSONObject embed = embeds.optJSONObject(i);
+            if (embed == null) continue;
+            String url = embed.optString("url", "").trim();
+            if (url.startsWith("https://") || url.startsWith("http://")) {
+                return url;
+            }
+        }
+        return "";
     }
 
     private static String cacheBusted(String url) {
