@@ -83,7 +83,11 @@ public final class BoardSync {
             throw new IllegalArgumentException(context.getString(R.string.error_board_no_messages, boardLabel));
         }
 
-        String hash = sha256(stableStringify(messages));
+        // Include the local rendering revision in the hash so a display-only
+        // change is republished once even when discord-guides.json itself did
+        // not change.
+        String renderingRevision = "guides".equals(boardKey) ? "guides-embed-footer-v1|" : "";
+        String hash = sha256(renderingRevision + stableStringify(messages));
         String previousHash = state.getBoardHash(boardKey);
         if (!previousHash.trim().isEmpty() && previousHash.equals(hash)) {
             log.info(context.getString(R.string.log_board_unchanged, boardLabel));
@@ -96,6 +100,14 @@ public final class BoardSync {
             JSONObject raw = messages.optJSONObject(i);
             if (raw == null) continue;
             JSONObject payload = PayloadNormalizer.normalizeMessage(raw);
+
+            // Guides: keep the public URL inside the SAME Discord embed and
+            // display it below the image using the embed footer. The original
+            // embed URL is kept as well, so the title remains clickable.
+            if ("guides".equals(boardKey)) {
+                putGuideLinkBelowImage(payload, extractGuideLink(raw));
+            }
+
             boolean hasContent = !payload.optString("content", "").trim().isEmpty();
             JSONArray embeds = payload.optJSONArray("embeds");
             boolean hasEmbeds = embeds != null && embeds.length() > 0;
@@ -103,30 +115,25 @@ public final class BoardSync {
             discord.sendMessage(channelId, payload);
             published++;
             Thread.sleep(800L);
-
-            // Guides use the embed URL as their public guide link. Discord makes
-            // that URL clickable on the title, but does not display it below
-            // the embed image. Publish the same URL as a second message so the
-            // guide link is visibly placed immediately below its image, as in
-            // the Crystal Planner Web preview.
-            if ("guides".equals(boardKey)) {
-                String guideLink = extractGuideLink(raw);
-                if (!guideLink.isEmpty()) {
-                    JSONObject linkPayload = new JSONObject();
-                    linkPayload.put("content", guideLink);
-                    JSONObject allowedMentions = new JSONObject();
-                    allowedMentions.put("parse", new JSONArray());
-                    linkPayload.put("allowed_mentions", allowedMentions);
-                    discord.sendMessage(channelId, linkPayload);
-                    published++;
-                    Thread.sleep(800L);
-                }
-            }
         }
 
         state.setBoardHash(boardKey, hash);
         log.info(context.getString(R.string.log_board_published, boardLabel, published));
         return published;
+    }
+
+    private static void putGuideLinkBelowImage(JSONObject payload, String guideLink) throws Exception {
+        if (payload == null || guideLink == null || guideLink.trim().isEmpty()) return;
+
+        JSONArray embeds = payload.optJSONArray("embeds");
+        if (embeds == null || embeds.length() == 0) return;
+
+        JSONObject embed = embeds.optJSONObject(0);
+        if (embed == null) return;
+
+        JSONObject footer = new JSONObject();
+        footer.put("text", guideLink.trim());
+        embed.put("footer", footer);
     }
 
     private static String extractGuideLink(JSONObject raw) {
