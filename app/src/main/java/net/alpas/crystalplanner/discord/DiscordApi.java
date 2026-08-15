@@ -45,12 +45,79 @@ public final class DiscordApi {
     }
 
     public void sendMessage(String channelId, JSONObject payload) throws Exception {
+        sendMessageAndReturn(channelId, payload);
+    }
+
+    public JSONObject sendMessageAndReturn(String channelId, JSONObject payload) throws Exception {
         HttpClient.Response response = http.postJson(
                 API + "/channels/" + requireSnowflake(channelId) + "/messages",
                 authorization,
                 payload
         );
         requireSuccess(response, context.getString(R.string.discord_op_send_message));
+        return new JSONObject(response.body == null || response.body.trim().isEmpty() ? "{}" : response.body);
+    }
+
+    /**
+     * Edits a bot-authored message. Returns false only when Discord says that
+     * the stored message no longer exists, allowing the caller to recreate it.
+     */
+    public boolean editMessageIfExists(String channelId, String messageId, JSONObject payload) throws Exception {
+        HttpClient.Response response = http.patchJson(
+                API + "/channels/" + requireSnowflake(channelId)
+                        + "/messages/" + requireSnowflake(messageId),
+                authorization,
+                payload
+        );
+        if (response.status == 404) return false;
+        requireSuccess(response, "edit Discord message");
+        return true;
+    }
+
+    /**
+     * Deletes only the supplied message. A missing message is treated as
+     * already deleted so local Event tracking can be cleaned safely.
+     */
+    public boolean deleteMessageIfExists(String channelId, String messageId) throws Exception {
+        HttpClient.Response response = http.delete(
+                API + "/channels/" + requireSnowflake(channelId)
+                        + "/messages/" + requireSnowflake(messageId),
+                authorization
+        );
+        if (response.status == 404) return false;
+        requireSuccess(response, "delete Discord message");
+        return true;
+    }
+
+    public boolean isMessageCrossposted(String channelId, String messageId) throws Exception {
+        HttpClient.Response response = http.get(
+                API + "/channels/" + requireSnowflake(channelId)
+                        + "/messages/" + requireSnowflake(messageId),
+                authorization
+        );
+        if (response.status == 404) return false;
+        requireSuccess(response, "read Discord message");
+        JSONObject message = new JSONObject(response.body == null || response.body.trim().isEmpty() ? "{}" : response.body);
+        int flags = message.optInt("flags", 0);
+        return (flags & 1) != 0;
+    }
+
+    /**
+     * Publishes a message from a Discord Announcement channel (crosspost).
+     * The route is intentionally attempted only once per call; if Discord
+     * applies the hourly announcement rate limit, BoardSync keeps the message
+     * and retries the crosspost during a later synchronization.
+     */
+    public void crosspostMessage(String channelId, String messageId) throws Exception {
+        HttpClient.Response response = http.request(
+                "POST",
+                API + "/channels/" + requireSnowflake(channelId)
+                        + "/messages/" + requireSnowflake(messageId) + "/crosspost",
+                authorization,
+                null,
+                1
+        );
+        requireSuccess(response, "publish Discord announcement");
     }
 
     public int clearChannel(String channelId) throws Exception {

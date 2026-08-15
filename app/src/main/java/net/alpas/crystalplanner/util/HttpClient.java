@@ -13,6 +13,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 public final class HttpClient {
     public static final class Response {
@@ -42,7 +48,12 @@ public final class HttpClient {
         }
     }
 
-    private static final String USER_AGENT = "DiscordBot (https://github.com/AlpasNet/Crystal-Planner, 1.0.1)";
+    private static final String USER_AGENT = "DiscordBot (https://github.com/AlpasNet/Crystal-Planner, 1.0.17)";
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+    private static final OkHttpClient OK_HTTP = new OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(35, TimeUnit.SECONDS)
+            .build();
 
     public Response get(String url, String authorization) throws Exception {
         return request("GET", url, authorization, null, 5);
@@ -54,6 +65,45 @@ public final class HttpClient {
 
     public Response delete(String url, String authorization) throws Exception {
         return request("DELETE", url, authorization, null, 5);
+    }
+
+    public Response patchJson(String url, String authorization, JSONObject body) throws Exception {
+        return patchJsonWithOkHttp(url, authorization, body == null ? "{}" : body.toString(), 5);
+    }
+
+    private Response patchJsonWithOkHttp(
+            String url,
+            String authorization,
+            String jsonBody,
+            int maxAttempts
+    ) throws Exception {
+        validateHttps(url);
+        int attempt = 0;
+        while (true) {
+            attempt++;
+            RequestBody body = RequestBody.create(jsonBody, JSON_MEDIA_TYPE);
+            Request.Builder builder = new Request.Builder()
+                    .url(url)
+                    .patch(body)
+                    .header("User-Agent", USER_AGENT)
+                    .header("Accept", "application/json,text/plain,*/*");
+            if (authorization != null && !authorization.trim().isEmpty()) {
+                builder.header("Authorization", authorization);
+            }
+
+            Response wrapped;
+            try (okhttp3.Response response = OK_HTTP.newCall(builder.build()).execute()) {
+                String responseBody = response.body() == null ? "" : response.body().string();
+                wrapped = new Response(response.code(), responseBody, response.headers().toMultimap());
+            }
+
+            if (wrapped.status != 429 || attempt >= Math.max(1, maxAttempts)) {
+                return wrapped;
+            }
+
+            long waitMs = parseRetryAfterMs(wrapped);
+            Thread.sleep(Math.min(Math.max(waitMs, 250L), 120_000L));
+        }
     }
 
     public Response request(

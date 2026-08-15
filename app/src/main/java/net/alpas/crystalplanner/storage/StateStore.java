@@ -16,6 +16,9 @@ import java.util.Set;
 
 public final class StateStore {
     private static final String PREFS = "crystal_planner_state";
+    private static final String KEY_EVENT_MESSAGES = "event_board_messages";
+    private static final String KEY_EVENT_CHANNEL = "event_board_channel";
+    private static final String KEY_EVENT_INITIALIZED = "event_board_initialized";
     public static final String KEY_LAST_RUN = "last_run";
     private final SharedPreferences prefs;
 
@@ -55,6 +58,40 @@ public final class StateStore {
         prefs.edit().putString("board_hash_" + boardKey, hash).apply();
     }
 
+    public JSONObject getEventMessageState() {
+        try {
+            return new JSONObject(prefs.getString(KEY_EVENT_MESSAGES, "{}"));
+        } catch (JSONException ignored) {
+            return new JSONObject();
+        }
+    }
+
+    public void setEventMessageState(JSONObject state) {
+        prefs.edit().putString(
+                KEY_EVENT_MESSAGES,
+                state == null ? "{}" : state.toString()
+        ).apply();
+    }
+
+    public void clearEventMessageState() {
+        prefs.edit().remove(KEY_EVENT_MESSAGES).apply();
+    }
+
+    public String getEventBoardChannel() {
+        return prefs.getString(KEY_EVENT_CHANNEL, "");
+    }
+
+    public boolean isEventBoardInitialized() {
+        return prefs.getBoolean(KEY_EVENT_INITIALIZED, false);
+    }
+
+    public void setEventBoardTracking(String channelId, boolean initialized) {
+        prefs.edit()
+                .putString(KEY_EVENT_CHANNEL, channelId == null ? "" : channelId.trim())
+                .putBoolean(KEY_EVENT_INITIALIZED, initialized)
+                .apply();
+    }
+
     public void setLastRun(boolean success, String summary) {
         JSONObject object = new JSONObject();
         try {
@@ -74,14 +111,14 @@ public final class StateStore {
         }
     }
 
-
     /**
-     * Exports only duplicate-prevention history: Lodestone seen IDs and board hashes.
+     * Exports duplicate-prevention history plus the per-Event Discord message
+     * mapping required to resume targeted Event edits after a restore.
      * Logs, scheduling state and execution status are intentionally excluded.
      */
     public JSONObject exportHistory() throws JSONException {
         JSONObject history = new JSONObject();
-        history.put("version", 1);
+        history.put("version", 2);
         JSONObject seen = new JSONObject();
         JSONObject boardHashes = new JSONObject();
 
@@ -104,17 +141,25 @@ public final class StateStore {
 
         history.put("seen", seen);
         history.put("boardHashes", boardHashes);
+        history.put("eventBoardChannel", getEventBoardChannel());
+        history.put("eventBoardInitialized", isEventBoardInitialized());
+        history.put("eventMessages", sanitizeEventMessageState(getEventMessageState()));
         return history;
     }
 
     /**
      * Replaces duplicate-prevention history with values from a trusted backup.
+     * Older backups without Event message tracking remain supported.
      */
     public void importHistory(JSONObject history) throws JSONException {
         if (history == null) return;
         SharedPreferences.Editor editor = prefs.edit();
         for (String key : prefs.getAll().keySet()) {
-            if (key.startsWith("seen_") || key.startsWith("board_hash_")) {
+            if (key.startsWith("seen_")
+                    || key.startsWith("board_hash_")
+                    || KEY_EVENT_MESSAGES.equals(key)
+                    || KEY_EVENT_CHANNEL.equals(key)
+                    || KEY_EVENT_INITIALIZED.equals(key)) {
                 editor.remove(key);
             }
         }
@@ -152,7 +197,51 @@ public final class StateStore {
                 }
             }
         }
+
+        String eventChannel = history.optString("eventBoardChannel", "").trim();
+        JSONObject eventMessages = history.optJSONObject("eventMessages");
+        boolean eventInitialized = history.optBoolean(
+                "eventBoardInitialized",
+                eventMessages != null && eventMessages.length() > 0 && !eventChannel.isEmpty()
+        );
+        if (eventChannel.matches("[0-9]{15,22}")) {
+            editor.putString(KEY_EVENT_CHANNEL, eventChannel);
+        }
+        if (eventMessages != null) {
+            editor.putString(KEY_EVENT_MESSAGES, sanitizeEventMessageState(eventMessages).toString());
+        }
+        editor.putBoolean(KEY_EVENT_INITIALIZED, eventInitialized && !eventChannel.isEmpty());
         editor.apply();
+    }
+
+    private static JSONObject sanitizeEventMessageState(JSONObject source) throws JSONException {
+        JSONObject result = new JSONObject();
+        if (source == null) return result;
+
+        Iterator<String> keys = source.keys();
+        int count = 0;
+        while (keys.hasNext() && count < 200) {
+            String key = keys.next();
+            if (key == null || key.length() > 160 || !key.matches("[A-Za-z0-9_-]+")) continue;
+            JSONObject record = source.optJSONObject(key);
+            if (record == null) continue;
+
+            String messageId = record.optString("message_id", "").trim();
+            String hash = record.optString("hash", "").trim();
+            String channelId = record.optString("channel_id", "").trim();
+            if (!messageId.matches("[0-9]{15,22}")) continue;
+            if (hash.length() > 256) hash = "";
+            if (!channelId.isEmpty() && !channelId.matches("[0-9]{15,22}")) channelId = "";
+
+            JSONObject clean = new JSONObject();
+            clean.put("message_id", messageId);
+            clean.put("hash", hash);
+            clean.put("crossposted", record.optBoolean("crossposted", false));
+            if (!channelId.isEmpty()) clean.put("channel_id", channelId);
+            result.put(key, clean);
+            count++;
+        }
+        return result;
     }
 
     private static boolean isSafeHistoryKey(String value) {
