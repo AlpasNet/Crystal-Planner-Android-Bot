@@ -17,6 +17,10 @@ import java.util.List;
 public final class DiscordApi {
     private static final String API = "https://discord.com/api/v10";
     private static final Duration BULK_DELETE_LIMIT = Duration.ofDays(14).minusMinutes(5);
+    // Discord MessageFlags.SUPPRESS_NOTIFICATIONS (1 << 12).
+    // Every message created by Crystal Planner is sent silently: it remains
+    // visible in the channel but does not trigger push/desktop notifications.
+    private static final int MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS = 1 << 12;
 
     private final Context context;
     private final HttpClient http;
@@ -49,13 +53,29 @@ public final class DiscordApi {
     }
 
     public JSONObject sendMessageAndReturn(String channelId, JSONObject payload) throws Exception {
+        JSONObject silentPayload = withSuppressedNotifications(payload);
         HttpClient.Response response = http.postJson(
                 API + "/channels/" + requireSnowflake(channelId) + "/messages",
                 authorization,
-                payload
+                silentPayload
         );
         requireSuccess(response, context.getString(R.string.discord_op_send_message));
         return new JSONObject(response.body == null || response.body.trim().isEmpty() ? "{}" : response.body);
+    }
+
+    /**
+     * Returns a copy of the outgoing Discord payload with SUPPRESS_NOTIFICATIONS
+     * enabled while preserving any flags already requested by the caller.
+     * Centralizing this here makes Lodestone, Events, Rules, Guides and Macros
+     * silent without each synchronizer having to remember the flag.
+     */
+    private JSONObject withSuppressedNotifications(JSONObject payload) throws Exception {
+        JSONObject silentPayload = payload == null
+                ? new JSONObject()
+                : new JSONObject(payload.toString());
+        int existingFlags = silentPayload.optInt("flags", 0);
+        silentPayload.put("flags", existingFlags | MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS);
+        return silentPayload;
     }
 
     /**
