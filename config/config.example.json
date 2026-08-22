@@ -1,0 +1,27 @@
+{
+  "syncIntervalMinutes": 15,
+  "webFolderUrl": "https://alpasnet.eu/cozy_events",
+  "jsonReadDelaySeconds": 3,
+  "events": {
+    "enabled": true,
+    "channelId": "",
+    "crosspostAnnouncements": true
+  },
+  "rules": {
+    "enabled": true,
+    "channelId": ""
+  },
+  "guides": {
+    "enabled": true,
+    "channelId": ""
+  },
+  "macros": {
+    "enabled": true,
+    "channelId": ""
+  },
+  "lodestone": {
+    "enabled": true,
+    "newsChannelId": "",
+    "topicsChannelId": ""
+  }
+}

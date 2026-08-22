@@ -1,9 +1,6 @@
-.gradle/
-.idea/
-local.properties
-build/
-*/build/
-*.iml
-captures/
-.externalNativeBuild/
-.cxx/
+node_modules/
+.env
+config/config.json
+data/*.json
+data/*.tmp
+*.log
