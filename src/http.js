@@ -1,6 +1,6 @@
 import { assertHttps, sleep } from "./utils.js";
 
-const USER_AGENT = "Crystal-Planner-Server/1.1.2 (+https://github.com/AlpasNet/Crystal-Planner)";
+const USER_AGENT = "Crystal-Planner-Server/1.1.3 (+https://github.com/AlpasNet/Crystal-Planner)";
 
 export async function fetchResponse(url, {
   method = "GET",

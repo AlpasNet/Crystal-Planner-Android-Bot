@@ -239,7 +239,9 @@ At minimum, the bot needs access to the configured channels and permission to se
 - All Web source URLs are required to use HTTPS.
 
 
-## Lodestone RSS (1.1.2)
+## Lodestone RSS (1.1.3)
+
+For RSS artwork, Crystal Planner prioritizes the official `<enclosure>` URL. **News** embeds intentionally omit the RSS description text and show the title/link/date/image only. **Topics** keep the cleaned description text and image.
 
 Lodestone publications are read exclusively from the official Square Enix RSS feeds:
 
@@ -258,6 +260,6 @@ Configure one Discord channel for each feed:
 
 On the **first synchronization only**, Crystal Planner publishes the 10 latest items from each feed to seed the configured Discord channel. From then on, synchronization is **append-only**: only RSS entries with an ID never seen before are published. Existing Discord messages are never deleted when they leave the RSS feed, never edited when an RSS item changes, and never recreated if someone deletes them manually. All new Discord messages remain silent (`SUPPRESS_NOTIFICATIONS`).
 
-RSS descriptions are decoded from XML/HTML entities and converted to clean Discord text. HTML tags are never intentionally sent to Discord. The parser also extracts the article image from RSS `enclosure`, `media:content`, `media:thumbnail`, or an `<img src>` contained in the RSS description/content, including when that HTML is XML-escaped.
+For **Topics**, RSS descriptions are decoded from XML/HTML entities and converted to clean Discord text. For **News**, the description is parsed only as a fallback source for an image and is not displayed. HTML tags are never intentionally sent to Discord. The parser prioritizes the official RSS `enclosure` image, then falls back to `media:content`, `media:thumbnail`, or an `<img src>` contained in RSS description/content.
 
 The old HTML category scraping (`Notices`, `Maintenance`, `Updates`) is no longer used.

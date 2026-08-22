@@ -150,3 +150,53 @@ test("RSS parser cleans escaped content:encoded and preserves readable lists", (
   assert.equal(item.description, "Summary\n• One\n• Two");
   assert.equal(item.image, "https://eu.finalfantasyxiv.com/lodestone/topics/image.jpg");
 });
+
+test("News uses enclosure as the embed image and omits the RSS description", async () => {
+  const xml = `<?xml version="1.0"?><rss version="2.0"><channel><item>
+<title>News with enclosure</title>
+<link>https://eu.finalfantasyxiv.com/lodestone/news/detail/enclosure-news</link>
+<guid>enclosure-news</guid>
+<pubDate>Sat, 22 Aug 2026 12:00:00 GMT</pubDate>
+<description><![CDATA[<p>This text must not be displayed for News.</p><img src="https://img.finalfantasyxiv.com/fallback.jpg">]]></description>
+<enclosure type="image/jpeg" length="0" url="https://img.finalfantasyxiv.com/official-enclosure.jpg" />
+</item></channel></rss>`;
+  const items = parseRssFeed(xml, FEED);
+  assert.equal(items[0].image, "https://img.finalfantasyxiv.com/official-enclosure.jpg");
+
+  const store = new MemoryStore();
+  const discord = new MockDiscord();
+  await syncRssFeed({ feed: FEED, channelId: "123456789012345", items, discord, store, logger });
+  const embed = discord.created[0].payload.embeds[0];
+  assert.equal(embed.image.url, "https://img.finalfantasyxiv.com/official-enclosure.jpg");
+  assert.equal(Object.prototype.hasOwnProperty.call(embed, "description"), false);
+});
+
+test("Topics keeps cleaned description and uses enclosure image", async () => {
+  const topicsFeed = { key: "topics", label: "Topics", emoji: "⭐", color: 456, url: "https://eu.finalfantasyxiv.com/lodestone/news/topics.xml" };
+  const xml = `<?xml version="1.0"?><rss version="2.0"><channel><item>
+<title>Topic with enclosure</title>
+<link>https://eu.finalfantasyxiv.com/lodestone/topics/detail/enclosure-topic</link>
+<guid>enclosure-topic</guid>
+<pubDate>Sat, 22 Aug 2026 12:30:00 GMT</pubDate>
+<description><![CDATA[<p>Topic description</p>]]></description>
+<enclosure url="https://img.finalfantasyxiv.com/topic-enclosure.jpg" type="image/jpeg" />
+</item></channel></rss>`;
+  const items = parseRssFeed(xml, topicsFeed);
+  const store = new MemoryStore();
+  store.state.lodestone.feeds.topics = { channelId: "", initialized: false, baselinePending: false, seenIds: [], messages: {} };
+  const discord = new MockDiscord();
+  await syncRssFeed({ feed: topicsFeed, channelId: "223456789012345", items, discord, store, logger });
+  const embed = discord.created[0].payload.embeds[0];
+  assert.equal(embed.description, "Topic description");
+  assert.equal(embed.image.url, "https://img.finalfantasyxiv.com/topic-enclosure.jpg");
+});
+
+test("RSS enclosure URL in element body is supported", () => {
+  const xml = `<?xml version="1.0"?><rss version="2.0"><channel><item>
+<title>Body enclosure</title><link>https://eu.finalfantasyxiv.com/lodestone/news/detail/body</link><guid>body-enclosure</guid>
+<pubDate>Sat, 22 Aug 2026 13:00:00 GMT</pubDate><description>Ignored description</description>
+<enclosure>https://img.finalfantasyxiv.com/body-enclosure.jpg</enclosure>
+</item></channel></rss>`;
+  const [item] = parseRssFeed(xml, FEED);
+  assert.equal(item.image, "https://img.finalfantasyxiv.com/body-enclosure.jpg");
+});

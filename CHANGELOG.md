@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3
+
+- Lodestone: `<enclosure>` is now the authoritative/priority source for RSS artwork.
+- Lodestone: enclosure URLs are accepted from quoted/unquoted `url`, `href` or `src` attributes, with a body-URL fallback.
+- Lodestone News (`news.xml`): the RSS description text is no longer displayed in Discord; title, link, timestamp and image remain.
+- Lodestone Topics (`topics.xml`): cleaned description text and image continue to be displayed.
+
 ## 1.1.2
 
 - Fixed Lodestone RSS descriptions containing XML-escaped HTML: HTML entities are decoded before tags are removed, so Discord receives clean text instead of `<p>`, `<br>`, `<a>`, etc.

@@ -221,7 +221,9 @@ function buildRssPayload(item, feed) {
     embed.url = item.url;
     embed.fields = [{ name: "Link", value: `[Open the article on The Lodestone](${item.url})`, inline: false }];
   }
-  if (item.description) embed.description = truncate(item.description, 4096);
+  // News RSS entries are intentionally image-first: do not repeat the HTML-derived
+  // description in Discord. Topics keep their cleaned description.
+  if (feed.key !== "news" && item.description) embed.description = truncate(item.description, 4096);
   if (item.publishedAt) embed.timestamp = item.publishedAt;
   if (item.image) embed.image = { url: item.image };
   return normalizeMessage({ embeds: [embed] });
@@ -239,23 +241,52 @@ function readLinkHref(source) {
 }
 
 function extractImage(itemBlock, descriptionHtml, baseUrl) {
-  // Square Enix RSS can expose HTML either literally inside CDATA or XML-escaped
-  // (&lt;img ...&gt;). Decode entities before looking for an <img> tag.
+  // The official Lodestone feeds expose the article artwork through <enclosure>.
+  // Treat enclosure as authoritative and only fall back to media:* or HTML <img>.
+  // Decode entities first because Square Enix can XML-escape embedded HTML.
   const decodedBlock = decodeXmlRepeated(String(itemBlock ?? ""));
   const decodedDescription = decodeXmlRepeated(String(descriptionHtml ?? ""));
 
-  const candidates = [
-    /<enclosure\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i,
-    /<media:content\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i,
-    /<media:thumbnail\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i
-  ];
-  for (const pattern of candidates) {
-    const match = decodedBlock.match(pattern);
-    if (match) return absoluteUrl(decodeXmlRepeated(match[1]), baseUrl);
+  const enclosure = extractElementUrl(decodedBlock, "enclosure", baseUrl);
+  if (enclosure) return enclosure;
+
+  const mediaContent = extractElementUrl(decodedBlock, "media:content", baseUrl);
+  if (mediaContent) return mediaContent;
+
+  const mediaThumbnail = extractElementUrl(decodedBlock, "media:thumbnail", baseUrl);
+  if (mediaThumbnail) return mediaThumbnail;
+
+  const img = decodedDescription.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i)
+    || decodedBlock.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i);
+  return img ? absoluteUrl(decodeXmlRepeated(img[1]), baseUrl) : "";
+}
+
+function extractElementUrl(source, elementName, baseUrl) {
+  const escaped = elementName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const text = String(source ?? "");
+
+  // Standard RSS form: <enclosure url="https://..." type="image/jpeg" />
+  const quoted = text.match(new RegExp(`<${escaped}\\b[^>]*\\b(?:url|href|src)\\s*=\\s*["']([^"']+)["'][^>]*>`, "i"));
+  if (quoted?.[1]) {
+    const url = absoluteUrl(decodeXmlRepeated(quoted[1]), baseUrl);
+    if (url) return url;
   }
 
-  const img = decodedDescription.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i);
-  return img ? absoluteUrl(decodeXmlRepeated(img[1]), baseUrl) : "";
+  // Defensive support for unquoted URL attributes.
+  const unquoted = text.match(new RegExp(`<${escaped}\\b[^>]*\\b(?:url|href|src)\\s*=\\s*([^\\s"'=<>]+)[^>]*>`, "i"));
+  if (unquoted?.[1]) {
+    const url = absoluteUrl(decodeXmlRepeated(unquoted[1]), baseUrl);
+    if (url) return url;
+  }
+
+  // Also support feeds that put the URL as the element body.
+  const body = text.match(new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i"));
+  if (body?.[1]) {
+    const url = absoluteUrl(cleanText(body[1]), baseUrl);
+    if (url) return url;
+  }
+
+  return "";
 }
 
 function unwrapCdata(value) {
