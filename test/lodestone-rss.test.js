@@ -118,3 +118,35 @@ test("changing the configured channel never deletes or republishes old Lodestone
   assert.equal(discord.deleted.length, 0);
   assert.equal(store.state.lodestone.feeds.news.channelId, "223456789012345");
 });
+
+test("RSS parser decodes XML-escaped HTML and extracts its image", () => {
+  const xml = `<?xml version="1.0"?><rss version="2.0"><channel><item>
+<title>Escaped article</title>
+<link>https://eu.finalfantasyxiv.com/lodestone/news/detail/escaped</link>
+<guid>escaped-id</guid>
+<pubDate>Sat, 22 Aug 2026 10:00:00 GMT</pubDate>
+<description>&amp;lt;p&amp;gt;First line&amp;lt;br&amp;gt;Second &amp;amp; final&amp;lt;/p&amp;gt;&amp;lt;img src=&amp;quot;https://img.finalfantasyxiv.com/escaped.jpg?x=1&amp;amp;y=2&amp;quot;&amp;gt;</description>
+</item></channel></rss>`;
+
+  const [item] = parseRssFeed(xml, FEED);
+  assert.ok(item);
+  assert.equal(item.id, "escaped-id");
+  assert.equal(item.description, "First line\nSecond & final");
+  assert.equal(item.image, "https://img.finalfantasyxiv.com/escaped.jpg?x=1&y=2");
+  assert.doesNotMatch(item.description, /<[^>]+>/);
+});
+
+test("RSS parser cleans escaped content:encoded and preserves readable lists", () => {
+  const xml = `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><item>
+<title><![CDATA[Encoded content]]></title>
+<link>https://eu.finalfantasyxiv.com/lodestone/topics/detail/encoded</link>
+<guid>encoded-content-id</guid>
+<pubDate>Sat, 22 Aug 2026 11:00:00 GMT</pubDate>
+<content:encoded><![CDATA[&lt;p&gt;Summary&lt;/p&gt;&lt;ul&gt;&lt;li&gt;One&lt;/li&gt;&lt;li&gt;Two&lt;/li&gt;&lt;/ul&gt;&lt;img src="/lodestone/topics/image.jpg" /&gt;]]></content:encoded>
+</item></channel></rss>`;
+
+  const [item] = parseRssFeed(xml, FEED);
+  assert.ok(item);
+  assert.equal(item.description, "Summary\n• One\n• Two");
+  assert.equal(item.image, "https://eu.finalfantasyxiv.com/lodestone/topics/image.jpg");
+});

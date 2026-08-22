@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2
+
+- Fixed Lodestone RSS descriptions containing XML-escaped HTML: HTML entities are decoded before tags are removed, so Discord receives clean text instead of `<p>`, `<br>`, `<a>`, etc.
+- Fixed Lodestone RSS image extraction when `<img>` markup is XML-escaped in `description` or `content:encoded`.
+- Image extraction still supports RSS `enclosure`, `media:content`, and `media:thumbnail`.
+- Lodestone synchronization remains append-only; no existing Discord message is automatically deleted or rewritten.
+
 ## 1.1.1
 
 - Lodestone RSS synchronization is now append-only.

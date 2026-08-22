@@ -239,17 +239,23 @@ function readLinkHref(source) {
 }
 
 function extractImage(itemBlock, descriptionHtml, baseUrl) {
+  // Square Enix RSS can expose HTML either literally inside CDATA or XML-escaped
+  // (&lt;img ...&gt;). Decode entities before looking for an <img> tag.
+  const decodedBlock = decodeXmlRepeated(String(itemBlock ?? ""));
+  const decodedDescription = decodeXmlRepeated(String(descriptionHtml ?? ""));
+
   const candidates = [
     /<enclosure\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i,
     /<media:content\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i,
     /<media:thumbnail\b[^>]*\burl\s*=\s*["']([^"']+)["'][^>]*>/i
   ];
   for (const pattern of candidates) {
-    const match = String(itemBlock ?? "").match(pattern);
-    if (match) return absoluteUrl(decodeXml(match[1]), baseUrl);
+    const match = decodedBlock.match(pattern);
+    if (match) return absoluteUrl(decodeXmlRepeated(match[1]), baseUrl);
   }
-  const img = String(descriptionHtml ?? "").match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i);
-  return img ? absoluteUrl(decodeXml(img[1]), baseUrl) : "";
+
+  const img = decodedDescription.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i);
+  return img ? absoluteUrl(decodeXmlRepeated(img[1]), baseUrl) : "";
 }
 
 function unwrapCdata(value) {
@@ -259,11 +265,15 @@ function unwrapCdata(value) {
 }
 
 function htmlToText(value) {
-  return cleanText(String(value ?? "")
+  // Decode first. If the feed contains &lt;p&gt; instead of a literal <p>,
+  // stripping tags before entity decoding would leak HTML tags into Discord.
+  const decoded = decodeXmlRepeated(String(value ?? ""));
+  return cleanText(decoded
     .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(?:p|div|li|section|article|h[1-6])>/gi, "\n")
+    .replace(/<\/(?:p|div|li|section|article|h[1-6]|ul|ol|blockquote)>/gi, "\n")
+    .replace(/<li\b[^>]*>/gi, "• ")
     .replace(/<[^>]+>/g, " "));
 }
 
@@ -292,6 +302,16 @@ function decodeXml(value) {
     }
     return named[entity.toLowerCase()] ?? whole;
   });
+}
+
+function decodeXmlRepeated(value, maxPasses = 3) {
+  let current = String(value ?? "");
+  for (let i = 0; i < maxPasses; i++) {
+    const decoded = decodeXml(current);
+    if (decoded === current) break;
+    current = decoded;
+  }
+  return current;
 }
 
 function normalizeDate(value) {
