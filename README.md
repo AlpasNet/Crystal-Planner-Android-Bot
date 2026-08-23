@@ -13,12 +13,12 @@ Crystal Planner Server is the Debian/Linux edition of Crystal Planner. It replac
 - **Silent publications**: every newly-created message uses Discord `SUPPRESS_NOTIFICATIONS` (`4096`) and `allowed_mentions.parse = []`.
 - **JSON-only local state**: no SQL database.
 - **Atomic state writes**: state is written to a temporary JSON file, validated, then renamed into place. If the live state is ever unreadable, the service backs it up and refuses to perform Discord changes rather than starting destructively from an empty history.
-- **Discord REST API only**: no Gateway presence is needed, so the bot may appear Offline in Discord even while synchronization is working normally.
+- **Discord presence**: synchronization still uses the REST API, while a minimal Discord Gateway connection is kept open only to display the bot as **Online** (green dot) while the service is running. No activity text is configured.
 
 ## Requirements
 
 - Debian 12/13 or another recent Linux distribution.
-- Node.js **20 or newer**. No npm package is required at runtime.
+- Node.js **20 or newer**. The Debian installer automatically installs the lightweight `ws` WebSocket dependency used for Discord presence.
 - A Discord bot token with the permissions required for the configured channels.
 - Dedicated Discord channels are strongly recommended because Rules/Guides/Macros synchronization clears the configured channel when their source JSON changes.
 
@@ -238,6 +238,30 @@ At minimum, the bot needs access to the configured channels and permission to se
 - The included systemd unit runs as the unprivileged `crystalplanner` user and only grants write access to `/var/lib/crystal-planner`.
 - All Web source URLs are required to use HTTPS.
 
+
+
+## Discord online status (1.1.4)
+
+Crystal Planner keeps a minimal Discord Gateway connection open only for presence. While the `crystal-planner` systemd service is running and connected to Discord, the bot appears **Online** with the green dot. No `Playing`, `Watching`, `Listening` or custom activity is configured.
+
+All message synchronization (Events/Polls, Rules, Guides, Macros and Lodestone) continues to use the existing Discord REST API code. The Gateway is not used to read messages or process Discord events.
+
+When the service is stopped, the process crashes, or the VPS is shut down, the Gateway connection disappears and Discord marks the bot Offline automatically. `discord.js` handles Gateway heartbeats and reconnection while the process remains running.
+
+When using the **full archive**, run the normal installer once so the lightweight Gateway dependency is installed into `/opt/crystal-planner/node_modules`:
+
+```bash
+sudo ./scripts/install-debian.sh
+sudo systemctl restart crystal-planner
+```
+
+When upgrading an existing **1.1.3** installation with the update-only archive, use the dedicated updater instead. It replaces only the 1.1.4 application files, installs the dependency and restarts the service without touching `/etc/crystal-planner` or `/var/lib/crystal-planner`:
+
+```bash
+sudo ./scripts/update-1.1.4.sh
+```
+
+The presence does not require any privileged Discord intent.
 
 ## Lodestone RSS (1.1.3)
 

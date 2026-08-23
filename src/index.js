@@ -4,6 +4,7 @@ import process from "node:process";
 import { loadConfig, loadDotEnv } from "./config.js";
 import { CrystalPlannerEngine } from "./engine.js";
 import { Logger } from "./logger.js";
+import { startPresence, stopPresence } from "./discord/presence.js";
 import { JsonStore } from "./storage/jsonStore.js";
 import { sleep } from "./utils.js";
 
@@ -55,6 +56,8 @@ async function main() {
   }
   if (args.command !== "run") throw new Error(`Unknown command: ${args.command}`);
 
+  await engine.check();
+
   let stopping = false;
   const stop = signal => {
     if (!stopping) logger.info(`${signal} received; Crystal Planner will stop after the current operation.`);
@@ -63,25 +66,34 @@ async function main() {
   process.on("SIGTERM", () => stop("SIGTERM"));
   process.on("SIGINT", () => stop("SIGINT"));
 
-  await engine.check();
-  while (!stopping) {
-    try {
-      await engine.runOnce();
-    } catch (error) {
-      store.setLastRun(false, error.message);
-      logger.error(`Synchronization cycle failed: ${error.stack || error.message}`);
+  // The REST synchronization remains unchanged; the Gateway is used only
+  // to expose a green Online presence while the systemd service is running.
+  let presenceClient = null;
+  try {
+    presenceClient = await startPresence(token, logger);
+
+    while (!stopping) {
+      try {
+        await engine.runOnce();
+      } catch (error) {
+        store.setLastRun(false, error.message);
+        logger.error(`Synchronization cycle failed: ${error.stack || error.message}`);
+      }
+      if (stopping) break;
+      const waitMs = config.syncIntervalMinutes * 60 * 1000;
+      logger.info(`Next synchronization in ${config.syncIntervalMinutes} minute(s).`);
+      // Sleep in short chunks so systemd stop requests are observed quickly.
+      let remaining = waitMs;
+      while (!stopping && remaining > 0) {
+        const chunk = Math.min(remaining, 5000);
+        await sleep(chunk);
+        remaining -= chunk;
+      }
     }
-    if (stopping) break;
-    const waitMs = config.syncIntervalMinutes * 60 * 1000;
-    logger.info(`Next synchronization in ${config.syncIntervalMinutes} minute(s).`);
-    // Sleep in short chunks so systemd stop requests are observed quickly.
-    let remaining = waitMs;
-    while (!stopping && remaining > 0) {
-      const chunk = Math.min(remaining, 5000);
-      await sleep(chunk);
-      remaining -= chunk;
-    }
+  } finally {
+    await stopPresence(presenceClient, logger);
   }
+
   logger.info("Crystal Planner stopped.");
 }
 

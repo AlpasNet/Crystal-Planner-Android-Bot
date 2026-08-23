@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.4
+
+- Added a minimal Discord Gateway connection used only for bot presence.
+- Crystal Planner now appears Online (green dot) while the service is running and connected.
+- No activity text is configured: no Playing, Watching, Listening or custom status.
+- Existing Discord message synchronization remains REST-based.
+- Gateway shutdown is handled cleanly when systemd sends SIGTERM/SIGINT; Discord then marks the bot Offline.
+- The Debian installer now installs the lightweight `ws` WebSocket dependency automatically; Node.js 20+ support is preserved.
+- Added `scripts/update-1.1.4.sh` for a safe in-place upgrade from 1.1.3 without replacing configuration, token or state files.
+
 ## 1.1.3
 
 - Lodestone: `<enclosure>` is now the authoritative/priority source for RSS artwork.

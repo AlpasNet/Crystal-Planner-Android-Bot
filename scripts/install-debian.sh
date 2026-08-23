@@ -38,6 +38,14 @@ cp -a "$SOURCE_DIR/test" "$APP_DIR/"
 cp -a "$SOURCE_DIR/package.json" "$APP_DIR/"
 if [[ -f "$SOURCE_DIR/package-lock.json" ]]; then cp -a "$SOURCE_DIR/package-lock.json" "$APP_DIR/"; fi
 
+echo "Installing Node.js runtime dependencies..."
+cd "$APP_DIR"
+if [[ -f package-lock.json ]]; then
+  npm ci --omit=dev --no-audit --no-fund
+else
+  npm install --omit=dev --no-audit --no-fund
+fi
+
 if [[ ! -f "$CONFIG_DIR/config.json" ]]; then
   install -m 0640 -o root -g "$SERVICE_USER" "$SOURCE_DIR/config/config.example.json" "$CONFIG_DIR/config.json"
   echo "Created $CONFIG_DIR/config.json"
