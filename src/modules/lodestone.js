@@ -171,8 +171,8 @@ export function parseRssFeed(xml, feed = {}) {
   const items = [];
   for (const block of blocks) {
     const title = cleanText(readTag(block, "title"));
-    const link = cleanUrl(readTag(block, "link") || readLinkHref(block));
     const guid = cleanText(readTag(block, "guid"));
+    const link = extractArticleUrl(block, readTag(block, "link"), guid, feed.url || "");
     const publishedRaw = cleanText(readTag(block, "pubDate") || readTag(block, "dc:date") || readTag(block, "date"));
     const descriptionHtml = readTag(block, "description") || readTag(block, "content:encoded");
     const description = truncate(htmlToText(descriptionHtml), 3500);
@@ -195,8 +195,8 @@ function parseAtomFeed(xml, feed) {
   const items = [];
   for (const block of blocks) {
     const title = cleanText(readTag(block, "title"));
-    const link = cleanUrl(readLinkHref(block));
     const guid = cleanText(readTag(block, "id"));
+    const link = extractArticleUrl(block, "", guid, feed.url || "");
     const publishedRaw = cleanText(readTag(block, "published") || readTag(block, "updated"));
     const descriptionHtml = readTag(block, "summary") || readTag(block, "content");
     const description = truncate(htmlToText(descriptionHtml), 3500);
@@ -235,9 +235,92 @@ function readTag(source, name) {
   return match ? unwrapCdata(match[1]) : "";
 }
 
-function readLinkHref(source) {
-  const match = String(source ?? "").match(/<link\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*\/?\s*>/i);
-  return match ? decodeXml(match[1]) : "";
+function extractArticleUrl(itemBlock, directLink, guid, feedUrl) {
+  const decoded = decodeXmlRepeated(String(itemBlock ?? ""));
+  const candidates = [];
+
+  // RSS normally provides a text <link> containing the article URL. Prefer it,
+  // but validate it because some feeds also expose image/enclosure links.
+  if (directLink) candidates.push(directLink);
+
+  // Atom-style feeds can contain multiple <link href=...> elements. The
+  // rel="alternate" link is the article; rel="enclosure" is artwork/media.
+  for (const tag of decoded.matchAll(/<link\b([^>]*)\/?\s*>/gi)) {
+    const attrs = tag[1] || "";
+    const href = readAttribute(attrs, "href");
+    if (!href) continue;
+    const rel = cleanText(readAttribute(attrs, "rel")).toLowerCase();
+    if (rel === "alternate" || rel === "") candidates.push(href);
+  }
+
+  // Some publishers use the GUID as the canonical article URL.
+  if (guid) candidates.push(guid);
+
+  // Last-resort discovery: find Lodestone detail URLs in the item. This also
+  // protects against an enclosure/image link appearing before the article link.
+  for (const match of decoded.matchAll(/https?:\/\/[^\s<>'"]+/gi)) {
+    candidates.push(match[0]);
+  }
+
+  const normalized = [];
+  for (const candidate of candidates) {
+    const url = absoluteUrl(decodeXmlRepeated(candidate), feedUrl || "https://eu.finalfantasyxiv.com/");
+    if (url && !normalized.includes(url)) normalized.push(url);
+  }
+
+  // The official article pages use /lodestone/news/detail/... or
+  // /lodestone/topics/detail/.... Never use an image/enclosure URL here.
+  const canonical = normalized.find(isLodestoneArticleUrl);
+  if (canonical) return canonical;
+
+  // Defensive fallback for a future Lodestone URL shape: still require the
+  // official site and explicitly reject image-looking URLs.
+  return normalized.find(url => isLodestonePageUrl(url) && !isLikelyImageUrl(url)) || "";
+}
+
+function isLodestoneArticleUrl(value) {
+  try {
+    const url = new URL(value);
+    return isFinalFantasyXivHost(url.hostname)
+      && /^\/lodestone\/(?:news|topics)\/detail\//i.test(url.pathname)
+      && !isLikelyImageUrl(url.toString());
+  } catch {
+    return false;
+  }
+}
+
+function isLodestonePageUrl(value) {
+  try {
+    const url = new URL(value);
+    return isFinalFantasyXivHost(url.hostname) && url.pathname.startsWith("/lodestone/");
+  } catch {
+    return false;
+  }
+}
+
+function isFinalFantasyXivHost(hostname) {
+  const host = String(hostname ?? "").toLowerCase();
+  return host === "finalfantasyxiv.com" || host.endsWith(".finalfantasyxiv.com");
+}
+
+function isLikelyImageUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (host === "img.finalfantasyxiv.com" || host.endsWith(".img.finalfantasyxiv.com")) return true;
+    return /\.(?:avif|bmp|gif|jpe?g|png|svg|webp)(?:$|\?)/i.test(`${url.pathname}${url.search}`);
+  } catch {
+    return false;
+  }
+}
+
+function readAttribute(attributeText, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const source = String(attributeText ?? "");
+  const quoted = source.match(new RegExp(`(?:^|\\s)${escaped}\\s*=\\s*["']([^"']+)["']`, "i"));
+  if (quoted?.[1]) return decodeXmlRepeated(quoted[1]);
+  const unquoted = source.match(new RegExp(`(?:^|\\s)${escaped}\\s*=\\s*([^\\s"'=<>]+)`, "i"));
+  return unquoted?.[1] ? decodeXmlRepeated(unquoted[1]) : "";
 }
 
 function extractImage(itemBlock, descriptionHtml, baseUrl) {
@@ -263,24 +346,26 @@ function extractImage(itemBlock, descriptionHtml, baseUrl) {
 
 function extractElementUrl(source, elementName, baseUrl) {
   const escaped = elementName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const tagName = elementName.includes(":")
+    ? escaped
+    : `(?:[A-Za-z_][\\w.-]*:)?${escaped}`;
   const text = String(source ?? "");
 
-  // Standard RSS form: <enclosure url="https://..." type="image/jpeg" />
-  const quoted = text.match(new RegExp(`<${escaped}\\b[^>]*\\b(?:url|href|src)\\s*=\\s*["']([^"']+)["'][^>]*>`, "i"));
-  if (quoted?.[1]) {
-    const url = absoluteUrl(decodeXmlRepeated(quoted[1]), baseUrl);
-    if (url) return url;
-  }
-
-  // Defensive support for unquoted URL attributes.
-  const unquoted = text.match(new RegExp(`<${escaped}\\b[^>]*\\b(?:url|href|src)\\s*=\\s*([^\\s"'=<>]+)[^>]*>`, "i"));
-  if (unquoted?.[1]) {
-    const url = absoluteUrl(decodeXmlRepeated(unquoted[1]), baseUrl);
-    if (url) return url;
+  const opening = text.match(new RegExp(`<${tagName}\\b([^>]*)\\/?\\s*>`, "i"));
+  if (opening) {
+    const attrs = opening[1] || "";
+    // RSS 2.0 normally uses url=. RSS 1.0/RDF enclosure modules often use
+    // rdf:resource=. Support both, plus common media-feed alternatives.
+    for (const attr of ["url", "rdf:resource", "resource", "href", "src"]) {
+      const raw = readAttribute(attrs, attr);
+      if (!raw) continue;
+      const url = absoluteUrl(raw, baseUrl);
+      if (url) return url;
+    }
   }
 
   // Also support feeds that put the URL as the element body.
-  const body = text.match(new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i"));
+  const body = text.match(new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "i"));
   if (body?.[1]) {
     const url = absoluteUrl(cleanText(body[1]), baseUrl);
     if (url) return url;

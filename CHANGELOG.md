@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.5
+
+- Fixed Lodestone article links so Discord titles and the explicit Link field always target the official Lodestone article page, never an enclosure/image URL.
+- Atom-style `rel="alternate"` article links are preferred while `rel="enclosure"` links are excluded from article navigation.
+- Added validation for official `/lodestone/news/detail/...` and `/lodestone/topics/detail/...` URLs with an image-URL rejection fallback.
+- Lodestone RSS artwork now supports both RSS 2.0 `enclosure url="..."` and RSS 1.0/RDF `enclosure rdf:resource="..."` forms, plus `resource`, `href`, `src`, namespaced enclosure elements, and existing media/HTML fallbacks.
+- News still intentionally omits description text but now keeps the enclosure artwork as the final embed image.
+- Added a regression test reproducing a feed item where an enclosure image link appears before the real article link.
+
 ## 1.1.4
 
 - Added a minimal Discord Gateway connection used only for bot presence.

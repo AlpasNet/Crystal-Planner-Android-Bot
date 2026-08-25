@@ -200,3 +200,29 @@ test("RSS enclosure URL in element body is supported", () => {
   const [item] = parseRssFeed(xml, FEED);
   assert.equal(item.image, "https://img.finalfantasyxiv.com/body-enclosure.jpg");
 });
+
+test("Lodestone article link never resolves to the enclosure image and RDF enclosure is displayed", async () => {
+  const xml = `<?xml version="1.0"?><rss version="2.0" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><channel><item>
+<title>News with separate article and artwork links</title>
+<link rel="enclosure" href="https://img.finalfantasyxiv.com/lds/h/example-news.jpg" />
+<link rel="alternate" href="https://eu.finalfantasyxiv.com/lodestone/news/detail/real-article-id" />
+<guid>real-article-id</guid>
+<pubDate>Sun, 23 Aug 2026 12:00:00 GMT</pubDate>
+<description><![CDATA[<p>This News description must not be displayed.</p>]]></description>
+<enclosure rdf:resource="https://img.finalfantasyxiv.com/lds/h/official-rdf-image.jpg" type="image/jpeg" />
+</item></channel></rss>`;
+
+  const items = parseRssFeed(xml, FEED);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].url, "https://eu.finalfantasyxiv.com/lodestone/news/detail/real-article-id");
+  assert.equal(items[0].image, "https://img.finalfantasyxiv.com/lds/h/official-rdf-image.jpg");
+
+  const store = new MemoryStore();
+  const discord = new MockDiscord();
+  await syncRssFeed({ feed: FEED, channelId: "123456789012345", items, discord, store, logger });
+  const embed = discord.created[0].payload.embeds[0];
+  assert.equal(embed.url, "https://eu.finalfantasyxiv.com/lodestone/news/detail/real-article-id");
+  assert.equal(embed.fields[0].value, "[Open the article on The Lodestone](https://eu.finalfantasyxiv.com/lodestone/news/detail/real-article-id)");
+  assert.equal(embed.image.url, "https://img.finalfantasyxiv.com/lds/h/official-rdf-image.jpg");
+  assert.equal(Object.prototype.hasOwnProperty.call(embed, "description"), false);
+});

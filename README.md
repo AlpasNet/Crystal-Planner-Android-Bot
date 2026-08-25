@@ -263,6 +263,12 @@ sudo ./scripts/update-1.1.4.sh
 
 The presence does not require any privileged Discord intent.
 
+## Lodestone RSS link/image fix (1.1.5)
+
+For Lodestone entries, the Discord embed URL and the visible **Open the article on The Lodestone** link are validated as official article pages (`/lodestone/news/detail/...` or `/lodestone/topics/detail/...`). Image/enclosure URLs are never accepted as article navigation links.
+
+RSS artwork prioritizes `<enclosure>`. Both `url="..."` and RDF-style `rdf:resource="..."` enclosure attributes are supported. For **News**, description text is intentionally omitted while the enclosure artwork remains displayed as the embed image. **Topics** keep their cleaned description plus artwork.
+
 ## Lodestone RSS (1.1.3)
 
 For RSS artwork, Crystal Planner prioritizes the official `<enclosure>` URL. **News** embeds intentionally omit the RSS description text and show the title/link/date/image only. **Topics** keep the cleaned description text and image.

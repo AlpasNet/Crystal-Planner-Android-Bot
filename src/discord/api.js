@@ -1,7 +1,7 @@
 import { requireSnowflake, sleep } from "../utils.js";
 
 const API = "https://discord.com/api/v10";
-const USER_AGENT = "DiscordBot (https://github.com/AlpasNet/Crystal-Planner, Crystal-Planner-Server/1.1.3)";
+const USER_AGENT = "DiscordBot (https://github.com/AlpasNet/Crystal-Planner, Crystal-Planner-Server/1.1.5)";
 const SUPPRESS_NOTIFICATIONS = 1 << 12;
 const CROSSPOSTED = 1 << 0;
 const FOURTEEN_DAYS_MINUS_FIVE_MINUTES = (14 * 24 * 60 * 60 * 1000) - (5 * 60 * 1000);
