@@ -42,6 +42,7 @@ export async function syncEventAnnouncements({
 
   let changed = 0;
   let messageId = String(state.messageId ?? "").trim();
+  let crossposted = Boolean(state.crossposted) || settings.publishAnnouncements === false;
   const previousChannel = String(state.channelId ?? "").trim();
 
   if (previousChannel && previousChannel !== settings.channelId && messageId) {
@@ -52,6 +53,7 @@ export async function syncEventAnnouncements({
       logger.warn(`Event announcements summary: unable to remove old tracked message ${messageId}: ${error.message}`);
     }
     messageId = "";
+    crossposted = settings.publishAnnouncements === false;
   }
 
   if (!messageId) {
@@ -61,8 +63,14 @@ export async function syncEventAnnouncements({
     state.channelId = settings.channelId;
     state.messageId = messageId;
     state.hash = hash;
+    state.crossposted = crossposted;
     store.saveEventAnnouncementState();
     logger.info(`Event announcements summary: created Discord message ${messageId} with ${availableEvents.length} event(s).`);
+    if (settings.publishAnnouncements !== false) {
+      crossposted = await tryPublishAnnouncement({ discord, logger, channelId: settings.channelId, messageId });
+      state.crossposted = crossposted;
+      store.saveEventAnnouncementState();
+    }
     return 1;
   }
 
@@ -72,6 +80,7 @@ export async function syncEventAnnouncements({
       const created = await discord.sendMessage(settings.channelId, payload);
       messageId = String(created?.id ?? "").trim();
       if (!messageId) throw new Error("Discord did not return the recreated Event announcements summary message ID.");
+      crossposted = settings.publishAnnouncements === false;
       logger.info(`Event announcements summary: recreated missing Discord message ${messageId}.`);
     } else {
       logger.info(`Event announcements summary: updated Discord message ${messageId} with ${availableEvents.length} event(s).`);
@@ -84,14 +93,21 @@ export async function syncEventAnnouncements({
       const created = await discord.sendMessage(settings.channelId, payload);
       messageId = String(created?.id ?? "").trim();
       if (!messageId) throw new Error("Discord did not return the recreated Event announcements summary message ID.");
+      crossposted = settings.publishAnnouncements === false;
       logger.info(`Event announcements summary: recreated manually deleted Discord message ${messageId}.`);
       changed = 1;
     }
   }
 
+  if (settings.publishAnnouncements !== false && !crossposted && messageId) {
+    crossposted = await tryPublishAnnouncement({ discord, logger, channelId: settings.channelId, messageId });
+    if (crossposted) changed++;
+  }
+
   state.channelId = settings.channelId;
   state.messageId = messageId;
   state.hash = hash;
+  state.crossposted = crossposted;
   store.saveEventAnnouncementState();
   return changed;
 }
@@ -170,4 +186,21 @@ function sanitizeTitle(value) {
     .replace(/\*\*/g, "")
     .trim()
     .slice(0, 180) || "Event";
+}
+
+async function tryPublishAnnouncement({ discord, logger, channelId, messageId }) {
+  try {
+    await discord.crosspostMessage(channelId, messageId);
+    logger.info(`Event announcements summary: published announcement ${messageId}.`);
+    return true;
+  } catch (error) {
+    try {
+      if (await discord.isMessageCrossposted(channelId, messageId)) {
+        logger.info(`Event announcements summary: announcement ${messageId} was already published.`);
+        return true;
+      }
+    } catch {}
+    logger.warn(`Event announcements summary: unable to publish ${messageId}: ${error.message}. Ensure eventAnnouncements.channelId is a Discord Announcement channel and the bot can publish messages. It will retry later.`);
+    return false;
+  }
 }

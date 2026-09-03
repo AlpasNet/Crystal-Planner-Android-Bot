@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.7
+
+- Event announcements configuration loading is more robust and logs the effective configuration.
+- The real config/state file paths are logged at startup.
+- Regular Events/Polls messages are no longer crossposted.
+- `eventAnnouncements.channelId` is now the only channel used for Discord Announcement publishing.
+- The summary message is crossposted once after creation/recreation and its crosspost state is persisted/retried.
+- Added `eventAnnouncements.publishAnnouncements` (default `true`).
+- Accepts `eventAnnouncements`, `eventAnnouncement`, `announcements`, or `events.announcements` configuration blocks for compatibility.
+
+
 ## 1.1.6
 
 - Added an optional persistent **Available Events** summary message for a dedicated Discord announcements channel.

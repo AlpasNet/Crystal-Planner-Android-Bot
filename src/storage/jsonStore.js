@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const DEFAULT_STATE = {
-  version: 4,
+  version: 5,
   seen: {},
   boardHashes: {},
   events: {
@@ -13,7 +13,8 @@ const DEFAULT_STATE = {
   eventAnnouncements: {
     channelId: "",
     messageId: "",
-    hash: ""
+    hash: "",
+    crossposted: false
   },
   lodestone: {
     feeds: {
@@ -50,7 +51,7 @@ function normalizeState(raw) {
   return {
     ...clone(DEFAULT_STATE),
     ...(raw && typeof raw === "object" ? raw : {}),
-    version: 4,
+    version: 5,
     seen: raw?.seen && typeof raw.seen === "object" ? raw.seen : {},
     boardHashes: raw?.boardHashes && typeof raw.boardHashes === "object" ? raw.boardHashes : {},
     events: {

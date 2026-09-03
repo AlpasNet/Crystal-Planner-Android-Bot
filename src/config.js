@@ -6,8 +6,8 @@ const DEFAULT_CONFIG = {
   syncIntervalMinutes: 15,
   webFolderUrl: "",
   jsonReadDelaySeconds: 3,
-  events: { enabled: false, channelId: "", crosspostAnnouncements: true },
-  eventAnnouncements: { enabled: false, channelId: "", discordUrl: "", imageUrl: "" },
+  events: { enabled: false, channelId: "", crosspostAnnouncements: false },
+  eventAnnouncements: { enabled: false, channelId: "", discordUrl: "", imageUrl: "", publishAnnouncements: true },
   rules: { enabled: false, channelId: "" },
   guides: { enabled: false, channelId: "" },
   macros: { enabled: false, channelId: "" },
@@ -35,12 +35,44 @@ export function loadDotEnv(filePath = path.resolve(".env")) {
   }
 }
 
+function firstObject(...values) {
+  for (const value of values) {
+    if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  }
+  return {};
+}
+
+function configBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  const normalized = String(value).trim().toLowerCase();
+  if (["1", "true", "yes", "on", "enabled"].includes(normalized)) return true;
+  if (["0", "false", "no", "off", "disabled"].includes(normalized)) return false;
+  return Boolean(value);
+}
+
 function mergeConfig(raw = {}) {
+  const announcementRaw = firstObject(
+    raw.eventAnnouncements,
+    raw.eventAnnouncement,
+    raw.announcements,
+    raw["event-announcements"],
+    raw.events?.eventAnnouncements,
+    raw.events?.eventAnnouncement,
+    raw.events?.announcements
+  );
+  const mergedAnnouncements = { ...DEFAULT_CONFIG.eventAnnouncements, ...announcementRaw };
+  // If a complete announcement block is present but `enabled` was omitted,
+  // consider it enabled. An explicit enabled:false always wins.
+  if (!("enabled" in announcementRaw) && Object.keys(announcementRaw).length > 0) {
+    mergedAnnouncements.enabled = true;
+  }
   return {
     ...DEFAULT_CONFIG,
     ...raw,
     events: { ...DEFAULT_CONFIG.events, ...(raw.events || {}) },
-    eventAnnouncements: { ...DEFAULT_CONFIG.eventAnnouncements, ...(raw.eventAnnouncements || {}) },
+    eventAnnouncements: mergedAnnouncements,
     rules: { ...DEFAULT_CONFIG.rules, ...(raw.rules || {}) },
     guides: { ...DEFAULT_CONFIG.guides, ...(raw.guides || {}) },
     macros: { ...DEFAULT_CONFIG.macros, ...(raw.macros || {}) },
@@ -90,12 +122,15 @@ export function validateConfig(config) {
       throw new Error(`${name}.channelId must be a valid Discord channel ID when enabled.`);
     }
   }
-  config.events.crosspostAnnouncements = Boolean(config.events.crosspostAnnouncements);
+  // Since 1.1.7 the regular Events/Polls channel is never crossposted.
+  // Announcements are published only from eventAnnouncements.channelId.
+  config.events.crosspostAnnouncements = false;
 
-  config.eventAnnouncements.enabled = Boolean(config.eventAnnouncements.enabled);
+  config.eventAnnouncements.enabled = configBoolean(config.eventAnnouncements.enabled, false);
   config.eventAnnouncements.channelId = String(config.eventAnnouncements.channelId ?? "").trim();
   config.eventAnnouncements.discordUrl = String(config.eventAnnouncements.discordUrl ?? "").trim();
   config.eventAnnouncements.imageUrl = String(config.eventAnnouncements.imageUrl ?? "").trim();
+  config.eventAnnouncements.publishAnnouncements = configBoolean(config.eventAnnouncements.publishAnnouncements, true);
   if (config.eventAnnouncements.enabled) {
     if (!isSnowflake(config.eventAnnouncements.channelId)) {
       throw new Error("eventAnnouncements.channelId must be a valid Discord channel ID when enabled.");

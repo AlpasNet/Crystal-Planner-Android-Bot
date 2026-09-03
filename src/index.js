@@ -36,6 +36,8 @@ async function main() {
   const statePath = path.resolve(args.state || process.env.CRYSTAL_PLANNER_STATE || "data/state.json");
   const token = process.env.DISCORD_TOKEN || "";
   const config = loadConfig(configPath);
+  logger.info(`Configuration file loaded: ${configPath}`);
+  logger.info(`State file: ${statePath}`);
   const store = new JsonStore(statePath, logger);
   store.load();
   const engine = new CrystalPlannerEngine({ config, store, logger, token });

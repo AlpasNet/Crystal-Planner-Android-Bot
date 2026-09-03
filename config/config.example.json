@@ -5,13 +5,14 @@
   "events": {
     "enabled": true,
     "channelId": "",
-    "crosspostAnnouncements": true
+    "crosspostAnnouncements": false
   },
   "eventAnnouncements": {
-    "enabled": false,
+    "enabled": true,
     "channelId": "",
     "discordUrl": "https://discord.gg/your-invite",
-    "imageUrl": "https://example.com/events-announcement.png"
+    "imageUrl": "https://example.com/events-announcement.png",
+    "publishAnnouncements": true
   },
   "rules": {
     "enabled": true,

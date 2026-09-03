@@ -15,6 +15,7 @@ export class CrystalPlannerEngine {
     const botName = await this.discord.verifyBot();
     this.logger.info(`Discord authentication successful: ${botName}`);
     this.#logPaths();
+    this.#logAnnouncementConfig();
     return botName;
   }
 
@@ -25,6 +26,7 @@ export class CrystalPlannerEngine {
 
     const botName = await this.discord.verifyBot();
     this.logger.info(`Discord authentication successful: ${botName}`);
+    this.#logAnnouncementConfig();
 
     try {
       const lodestoneResult = await syncLodestone({
@@ -45,7 +47,7 @@ export class CrystalPlannerEngine {
         key: "events", label: "Events/Polls", board: this.config.events,
         jsonUrl: this.config.urls.events, generatorUrl: this.config.urls.generator,
         generatorDelaySeconds: this.config.jsonReadDelaySeconds,
-        crosspostAnnouncements: this.config.events.crosspostAnnouncements
+        crosspostAnnouncements: false
       },
       { key: "rules", label: "Rules", board: this.config.rules, jsonUrl: this.config.urls.rules },
       { key: "guides", label: "Guides", board: this.config.guides, jsonUrl: this.config.urls.guides },
@@ -115,6 +117,16 @@ export class CrystalPlannerEngine {
     if (!unique.size) throw new Error("No Lodestone channel is configured.");
     this.logger.info(`Lodestone cleanup complete: ${total} message(s) deleted.`);
     return total;
+  }
+
+  #logAnnouncementConfig() {
+    const settings = this.config.eventAnnouncements || {};
+    if (settings.enabled) {
+      this.logger.info(`Event announcements summary: ENABLED on channel ${settings.channelId}; publish=${settings.publishAnnouncements !== false}.`);
+    } else {
+      this.logger.info("Event announcements summary: DISABLED by effective configuration.");
+    }
+    this.logger.info("Events/Polls automatic crosspost: disabled; announcement publishing belongs to Event announcements summary.");
   }
 
   #logPaths() {

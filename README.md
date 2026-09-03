@@ -317,3 +317,25 @@ The optional `eventAnnouncements` block publishes one persistent embed in a dedi
 The embed title is always **Evénements disponibles / Available Events**. It includes only real Events from `discord-bot-datas.json` (Polls are ignored), sorted by start time. Each entry shows its name, start date/time and end date/time. The configured Discord link is placed after the list and the configured illustration is used as the embed image at the bottom.
 
 Crystal Planner tracks this summary in `state.json` and edits the same Discord message when the Event list or configuration changes. It never clears the announcements channel. If the tracked message is manually deleted, it is recreated.
+
+## Event announcements (1.1.7)
+
+Use a Discord **Announcement channel** for `eventAnnouncements.channelId`. The regular `events.channelId` is a normal Events/Polls channel and is never crossposted.
+
+```json
+"events": {
+  "enabled": true,
+  "channelId": "EVENTS_CHANNEL_ID",
+  "crosspostAnnouncements": false
+},
+"eventAnnouncements": {
+  "enabled": true,
+  "channelId": "ANNOUNCEMENT_CHANNEL_ID",
+  "discordUrl": "https://discord.gg/your-invite",
+  "imageUrl": "https://example.com/events-announcement.png",
+  "publishAnnouncements": true
+}
+```
+
+The summary is kept as one Discord message. It is published from the Announcement channel once after creation/recreation. Edits continue to update that same tracked message. Startup logs show the exact loaded config file and the effective eventAnnouncements state.
+
