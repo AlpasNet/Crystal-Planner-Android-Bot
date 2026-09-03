@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { JsonStore } from "../src/storage/jsonStore.js";
 
-test("v2 Lodestone state upgrades to append-only v3 without losing tracked messages", () => {
+test("v2 Lodestone state upgrades to current append-only state without losing tracked messages", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cp-lodestone-state-"));
   const file = path.join(dir, "state.json");
   fs.writeFileSync(file, JSON.stringify({
@@ -25,7 +25,7 @@ test("v2 Lodestone state upgrades to append-only v3 without losing tracked messa
 
   const store = new JsonStore(file, { error() {} });
   const state = store.load();
-  assert.equal(state.version, 3);
+  assert.equal(state.version, 4);
   assert.equal(state.lodestone.feeds.news.initialized, true);
   assert.equal(state.lodestone.feeds.news.baselinePending, true);
   assert.deepEqual(state.lodestone.feeds.news.seenIds, ["rss-id-1"]);

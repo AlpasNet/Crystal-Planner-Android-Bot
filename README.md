@@ -5,6 +5,7 @@ Crystal Planner Server is the Debian/Linux edition of Crystal Planner. It replac
 ## Included features
 
 - **Events / Polls**: calls `generate_discord_bot_datas.php`, reads `discord-bot-datas.json`, creates one persistent Discord message per entry, edits only the entry that changed, and deletes only an entry that disappeared.
+- **Available Events announcement**: optional single persistent summary message in a separate announcements channel, listing Event name + start/end time, followed by a configurable Discord link and illustration image. Polls are excluded.
 - **Announcement channels**: a newly-created Event/Poll is crossposted once. If Discord rejects the crosspost temporarily (including rate limiting), the original message is preserved and crossposting is retried during a later synchronization.
 - **Rules**: `discord-rules.json`.
 - **Guides**: `discord-guides.json`; the guide URL remains on the embed and is also shown in the footer of the same embed, below the image.
@@ -105,6 +106,12 @@ Example:
     "enabled": true,
     "channelId": "123456789012345678",
     "crosspostAnnouncements": true
+  },
+  "eventAnnouncements": {
+    "enabled": true,
+    "channelId": "123456789012345680",
+    "discordUrl": "https://discord.gg/your-invite",
+    "imageUrl": "https://example.com/events-announcement.png"
   },
   "rules": {
     "enabled": true,
@@ -246,7 +253,7 @@ Crystal Planner keeps a minimal Discord Gateway connection open only for presenc
 
 All message synchronization (Events/Polls, Rules, Guides, Macros and Lodestone) continues to use the existing Discord REST API code. The Gateway is not used to read messages or process Discord events.
 
-When the service is stopped, the process crashes, or the VPS is shut down, the Gateway connection disappears and Discord marks the bot Offline automatically. `discord.js` handles Gateway heartbeats and reconnection while the process remains running.
+When the service is stopped, the process crashes, or the VPS is shut down, the Gateway connection disappears and Discord marks the bot Offline automatically. `ws` handles the WebSocket transport while Crystal Planner handles Gateway heartbeats and reconnection while the process remains running.
 
 When using the **full archive**, run the normal installer once so the lightweight Gateway dependency is installed into `/opt/crystal-planner/node_modules`:
 
@@ -293,3 +300,20 @@ On the **first synchronization only**, Crystal Planner publishes the 10 latest i
 For **Topics**, RSS descriptions are decoded from XML/HTML entities and converted to clean Discord text. For **News**, the description is parsed only as a fallback source for an image and is not displayed. HTML tags are never intentionally sent to Discord. The parser prioritizes the official RSS `enclosure` image, then falls back to `media:content`, `media:thumbnail`, or an `<img src>` contained in RSS description/content.
 
 The old HTML category scraping (`Notices`, `Maintenance`, `Updates`) is no longer used.
+
+## Available Events summary (1.1.6)
+
+The optional `eventAnnouncements` block publishes one persistent embed in a dedicated Discord channel:
+
+```json
+"eventAnnouncements": {
+  "enabled": true,
+  "channelId": "123456789012345680",
+  "discordUrl": "https://discord.gg/your-invite",
+  "imageUrl": "https://example.com/events-announcement.png"
+}
+```
+
+The embed title is always **Evénements disponibles / Available Events**. It includes only real Events from `discord-bot-datas.json` (Polls are ignored), sorted by start time. Each entry shows its name, start date/time and end date/time. The configured Discord link is placed after the list and the configured illustration is used as the embed image at the bottom.
+
+Crystal Planner tracks this summary in `state.json` and edits the same Discord message when the Event list or configuration changes. It never clears the announcements channel. If the tracked message is manually deleted, it is recreated.

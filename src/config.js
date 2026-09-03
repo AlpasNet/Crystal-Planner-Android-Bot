@@ -7,6 +7,7 @@ const DEFAULT_CONFIG = {
   webFolderUrl: "",
   jsonReadDelaySeconds: 3,
   events: { enabled: false, channelId: "", crosspostAnnouncements: true },
+  eventAnnouncements: { enabled: false, channelId: "", discordUrl: "", imageUrl: "" },
   rules: { enabled: false, channelId: "" },
   guides: { enabled: false, channelId: "" },
   macros: { enabled: false, channelId: "" },
@@ -39,6 +40,7 @@ function mergeConfig(raw = {}) {
     ...DEFAULT_CONFIG,
     ...raw,
     events: { ...DEFAULT_CONFIG.events, ...(raw.events || {}) },
+    eventAnnouncements: { ...DEFAULT_CONFIG.eventAnnouncements, ...(raw.eventAnnouncements || {}) },
     rules: { ...DEFAULT_CONFIG.rules, ...(raw.rules || {}) },
     guides: { ...DEFAULT_CONFIG.guides, ...(raw.guides || {}) },
     macros: { ...DEFAULT_CONFIG.macros, ...(raw.macros || {}) },
@@ -75,7 +77,7 @@ export function validateConfig(config) {
   config.jsonReadDelaySeconds = Math.floor(delay);
 
   config.webFolderUrl = normalizeFolder(config.webFolderUrl);
-  const webBoardsEnabled = [config.events, config.rules, config.guides, config.macros].some(board => Boolean(board.enabled));
+  const webBoardsEnabled = [config.events, config.rules, config.guides, config.macros, config.eventAnnouncements].some(board => Boolean(board.enabled));
   if (webBoardsEnabled) {
     if (!config.webFolderUrl) throw new Error("webFolderUrl is required when a Web board is enabled.");
     assertHttps(config.webFolderUrl, "webFolderUrl");
@@ -89,6 +91,20 @@ export function validateConfig(config) {
     }
   }
   config.events.crosspostAnnouncements = Boolean(config.events.crosspostAnnouncements);
+
+  config.eventAnnouncements.enabled = Boolean(config.eventAnnouncements.enabled);
+  config.eventAnnouncements.channelId = String(config.eventAnnouncements.channelId ?? "").trim();
+  config.eventAnnouncements.discordUrl = String(config.eventAnnouncements.discordUrl ?? "").trim();
+  config.eventAnnouncements.imageUrl = String(config.eventAnnouncements.imageUrl ?? "").trim();
+  if (config.eventAnnouncements.enabled) {
+    if (!isSnowflake(config.eventAnnouncements.channelId)) {
+      throw new Error("eventAnnouncements.channelId must be a valid Discord channel ID when enabled.");
+    }
+    if (!config.eventAnnouncements.discordUrl) throw new Error("eventAnnouncements.discordUrl is required when enabled.");
+    if (!config.eventAnnouncements.imageUrl) throw new Error("eventAnnouncements.imageUrl is required when enabled.");
+    assertHttps(config.eventAnnouncements.discordUrl, "eventAnnouncements.discordUrl");
+    assertHttps(config.eventAnnouncements.imageUrl, "eventAnnouncements.imageUrl");
+  }
 
   config.lodestone.enabled = Boolean(config.lodestone.enabled);
 

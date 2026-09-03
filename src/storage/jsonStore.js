@@ -2,13 +2,18 @@ import fs from "node:fs";
 import path from "node:path";
 
 const DEFAULT_STATE = {
-  version: 3,
+  version: 4,
   seen: {},
   boardHashes: {},
   events: {
     channelId: "",
     initialized: false,
     messages: {}
+  },
+  eventAnnouncements: {
+    channelId: "",
+    messageId: "",
+    hash: ""
   },
   lodestone: {
     feeds: {
@@ -45,13 +50,17 @@ function normalizeState(raw) {
   return {
     ...clone(DEFAULT_STATE),
     ...(raw && typeof raw === "object" ? raw : {}),
-    version: 3,
+    version: 4,
     seen: raw?.seen && typeof raw.seen === "object" ? raw.seen : {},
     boardHashes: raw?.boardHashes && typeof raw.boardHashes === "object" ? raw.boardHashes : {},
     events: {
       ...clone(DEFAULT_STATE.events),
       ...(raw?.events && typeof raw.events === "object" ? raw.events : {}),
       messages: raw?.events?.messages && typeof raw.events.messages === "object" ? raw.events.messages : {}
+    },
+    eventAnnouncements: {
+      ...clone(DEFAULT_STATE.eventAnnouncements),
+      ...(raw?.eventAnnouncements && typeof raw.eventAnnouncements === "object" ? raw.eventAnnouncements : {})
     },
     lodestone: {
       feeds: {
@@ -124,6 +133,14 @@ export class JsonStore {
   }
 
   saveEventState() {
+    this.save();
+  }
+
+  getEventAnnouncementState() {
+    return this.state.eventAnnouncements;
+  }
+
+  saveEventAnnouncementState() {
     this.save();
   }
 

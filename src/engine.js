@@ -1,6 +1,7 @@
 import { DiscordApi } from "./discord/api.js";
 import { syncBoard } from "./modules/boards.js";
 import { LODESTONE_FEEDS, syncLodestone } from "./modules/lodestone.js";
+import { syncEventAnnouncements } from "./modules/eventAnnouncements.js";
 
 export class CrystalPlannerEngine {
   constructor({ config, store, logger, token }) {
@@ -70,6 +71,19 @@ export class CrystalPlannerEngine {
         summary.errors++;
         this.logger.error(`${entry.label} synchronization error: ${error.message}`);
       }
+    }
+
+    try {
+      summary.boardMessages += await syncEventAnnouncements({
+        config: this.config,
+        discord: this.discord,
+        store: this.store,
+        logger: this.logger,
+        callGenerator: Boolean(this.config.eventAnnouncements.enabled && !this.config.events.enabled)
+      });
+    } catch (error) {
+      summary.errors++;
+      this.logger.error(`Event announcements summary synchronization error: ${error.message}`);
     }
 
     const description = `${summary.lodestoneMessages} Lodestone message(s), ${summary.boardMessages} board change(s), ${summary.errors} error(s)`;

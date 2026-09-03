@@ -7,6 +7,12 @@
     "channelId": "",
     "crosspostAnnouncements": true
   },
+  "eventAnnouncements": {
+    "enabled": false,
+    "channelId": "",
+    "discordUrl": "https://discord.gg/your-invite",
+    "imageUrl": "https://example.com/events-announcement.png"
+  },
   "rules": {
     "enabled": true,
     "channelId": ""

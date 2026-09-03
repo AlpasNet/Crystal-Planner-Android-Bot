@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.6
+
+- Added an optional persistent **Available Events** summary message for a dedicated Discord announcements channel.
+- Fixed bilingual title: `Evénements disponibles / Available Events`.
+- Lists Events only (Polls are excluded), sorted by start time, with start/end Discord timestamps.
+- Adds a configurable Discord link and a configurable illustration image at the end of the embed.
+- The summary is created once and then edited in place when the available Event list or configured link/image changes.
+- If the tracked summary message is manually deleted, Crystal Planner recreates it without clearing the channel.
+- JSON state schema bumped to version 4 to persist the summary message ID/hash.
+
 ## 1.1.5
 
 - Fixed Lodestone article links so Discord titles and the explicit Link field always target the official Lodestone article page, never an enclosure/image URL.
